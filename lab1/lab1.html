@@ -3,11 +3,33 @@
 	<link rel="stylesheet" href="./css/main.css">
 </head>
 <body>
-	<ul>
-		<li><a class="active" href="#graph">Graph</a></li>
+	<ul class="top-level-menu">
+		<li><a class="active" href="#graph">Graph</a>
+			<ul class="second-level-menu">
+				<li><a href="#newgraph">New...</a>
+					<ul class="third-level-menu">
+						<li><a href="#manual">Manual</a></li>
+						<li><a href="#generate">Generate</a></li>
+					</ul>
+				</li>
+				<li><a href="#load">Load from file</a></li>
+				<li><a href="#save">Save to file</a></li>
+			</ul>	
+		</li>
 		<li><a href="#smp">SMP</a></li>
-		<li><a href="#modeling">Modeling</a></li>
-		<li><a href="#statistics">Statistics</a></li>
+		<li><a href="#modeling">Modeling</a>
+			<ul class="second-level-menu">
+				<li><a href="#cpuparams">CPU Parameters</a></li>
+				<li><a href="#gantt">Gantt Chart</a></li>
+				<li><a href="#modeling_stats">Statistics</a></li>
+			</ul>
+		</li>
+		<li><a href="#statistics">Statistics</a>
+			<ul class="second-level-menu">
+				<li><a href="#stats_parameters">Parameters</a></li>
+				<li><a href="#stats_results">Results</a></li>
+			</ul>
+		</li>	
 		<li><a href="#help">Help</a></li>
 	</ul>
 </body>

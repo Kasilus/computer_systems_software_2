@@ -1,29 +1,68 @@
-ul {
-	list-style-type: none;
+ .top-level-menu {
 	padding: 0;
-	/* fills all ul with background-color. if it is default (visible),
-	we won't see it, cause all li elements are float and ul has height: 0.
-	*/
-	overflow: hidden;
+	height: 50px;
+	list-style-type: none;
 	background-color: #333;
 }
 
-li {
+.top-level-menu > li {
+	position: relative;
 	float: left;
+    width: 150px;
 }
 
-li a {
-	display: block;
-	/* 1st value = top & bottom, 2nd = left & right */
-	padding: 14px 16px;
-	text-decoration: none;
-	color: white;
-}
+.top-level-menu > li:hover { background: #111; }
 
-li a:hover:not(.active) {
+.top-level-menu > li a:hover:not(.active) {
 	background-color: #111;
 }
 
+.top-level-menu li:hover > ul {
+    display: block;
+}
+
+.top-level-menu a {
+	display: block;
+	padding-left: 10px;	
+	font: bold 14px Arial, Helvetica, sans-serif;
+    text-decoration: none;
+	line-height: 50px;
+	color: white;
+}
+
+.second-level-menu {
+	display: none;
+	position: absolute;
+	top: 50px;
+	left: -40px;
+	width: 150px;
+	list-style-type: none;
+}
+
+.second-level-menu > li {
+	position: relative;
+	height: 50px;
+	background-color: #219A23;
+}
+
+.second-level-menu > li:hover { background: #111; }
+
+.third-level-menu {
+	display: none;
+    position: absolute;
+    top: 0;
+    right: -150px;
+    width: 150px;
+    list-style-type: none;
+}
+
+.third-level-menu > li {
+    height: 50px;
+    background: #218923;
+}
+
+.third-level-menu > li:hover { background: #111; }
+
 .active {
-	background-color: #4CAF50;
+	background-color: #21AB23;
 }
