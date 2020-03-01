@@ -66,3 +66,47 @@
 .active {
 	background-color: #21AB23;
 }
+
+i {
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.right {
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+
+.menu-arrow {
+	float: right;
+    margin-right: 14px;
+    margin-top: 18px;
+    border-color: white;
+}
+
+.active .menu-arrow {
+	border-color: black;
+}
+
+.second-level-menu > li .menu-arrow {
+	border-color: black;
+}
+
+.second-level-menu > li:hover .menu-arrow {
+	border-color: white;
+}
+
+.third-level-menu > li .menu-arrow {
+	border-color: black;
+}
+
+.third-level-menu > li:hover .menu-arrow {
+	border-color: white;
+}
