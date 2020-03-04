@@ -1,11 +1,18 @@
-# Computer Systems Software-2 Labs
+# css-2_labs
 
-## Tools and libraries
-* npm 6.13.4
-* node 12.16.1
-* jquery 3.4.1
-* node-static 0.7.11
+> Computer System Software-2 Labs
 
-## Run
-1. CMD: node ./server.js
-2. URL: http://127.0.0.1:8080/lab1/lab1.html
+## Build Setup
+
+``` bash
+# install dependencies
+npm install
+
+# serve with hot reload at localhost:8080
+npm run dev
+
+# build for production with minification
+npm run build
+```
+
+For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
