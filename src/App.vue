@@ -5,7 +5,7 @@
         <ul class="second-level-menu">
           <li><a href="#newgraph">New...<i class="right menu-arrow"></i></a>
             <ul class="third-level-menu">
-              <li><a href="#manual">Manual</a></li>
+              <li><router-link :to="{name: 'graph/new/manual'}">Manual</router-link></li>
               <li><a href="#generate">Generate</a></li>
             </ul>
           </li>
