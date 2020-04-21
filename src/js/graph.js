@@ -84,6 +84,77 @@ class Graph {
     return srcVerticesToEdges;
   }
 
+  topologicalSort() {
+    var stack = [];
+    var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
+
+    var visited = new Map();
+
+    for (var srcVId of srcToAllVerticesIds.keys()) {
+      visited.set(srcVId, false);
+    }
+
+    var sortedVertices = [];
+    for (var srcVId of srcToAllVerticesIds.keys()) {
+      if (visited.get(srcVId) === false) {
+        this._topologicalSortIn(srcVId, srcToAllVerticesIds, visited, stack);
+      }
+    }
+
+    return stack;
+  }
+
+  _topologicalSortIn(srcVId, srcToAllVerticesIds, visited, stack) {
+    debug("visited is true now for src V" + srcVId);
+    visited.set(srcVId, true);
+
+    debug("iterate through dest Vs")
+    for (var destVId of srcToAllVerticesIds.get(srcVId)) {
+      debug("first dest V" + destVId);
+      if (visited.get(destVId) === false) {
+        debug("Wow, it is dest and it hasn't been visited yet! Let's iterate its dests (into recursion)!");
+        this._topologicalSortIn(destVId, srcToAllVerticesIds, visited, stack);
+      }
+    }
+    debug("list is empty for v" + srcVId);
+
+    stack.push(srcVId);
+    debug("stack = " + stack);
+  }
+
+  longestPath(vFromId) {
+    var topSortedVertices = this.topologicalSort();
+    debug("mark all as -infinity and source as 0");
+    var srcVerticeToEdges = this.getSrcVerticeIdToEdges();
+    var idToVerticeMap = this.getIdToVerticeMap();
+    var longestPath = new Map();
+    for (var srcVId of srcVerticeToEdges.keys()) {
+      longestPath.set(srcVId, Number.NEGATIVE_INFINITY);
+    }
+    longestPath.set(vFromId, idToVerticeMap.get(vFromId).weight);
+
+    debug("find longest path for all vertices");
+
+    while (topSortedVertices.length > 0) {
+      var curV = topSortedVertices.pop();
+      debug("curV = v" + curV);
+      if (longestPath.get(curV) !== Number.NEGATIVE_INFINITY) {
+        debug("longestPath.get(curV) !== Number.NEGATIVE_INFINITY");
+        for (var e of srcVerticeToEdges.get(curV)) {
+          debug("e = " + e.id);
+          debug("e.src = " + e.src);
+          debug("e.dest = " + e.dest);
+          debug("longestPath[e.dest] = " + longestPath.get(e.dest));
+          if (longestPath.get(e.dest) < longestPath.get(curV) + e.weight + idToVerticeMap.get(e.dest).weight) {
+            longestPath.set(e.dest, longestPath.get(curV) + e.weight + idToVerticeMap.get(e.dest).weight);
+          }
+        }
+      }
+    }
+
+    return longestPath;
+  }
+
   printGraph() {
     var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
     for (var srcVId of srcToAllVerticesIds.keys()) {
@@ -97,119 +168,122 @@ class Graph {
   }
 }
 
-function topologicalSort(graph) {
-  var stack = [];
-  var srcToAllVerticesIds = graph.getSrcToAllVerticesIds();
-
-  var visited = new Map();
-
-  for (var srcVId of srcToAllVerticesIds.keys()) {
-    visited.set(srcVId, false);
-  }
-
-  var sortedVertices = [];
-  for (var srcVId of srcToAllVerticesIds.keys()) {
-    if (visited.get(srcVId) === false) {
-      _topologicalSortIn(srcVId, srcToAllVerticesIds, visited, stack);
-    }
-  }
-
-  //var sortedVertices = [];
-  //while ((v = stack.pop()) != null) {
-  //	sortedVertices.push(v);
-  //}
-
-  return stack;
-}
-
-function _topologicalSortIn(srcVId, srcToAllVerticesIds, visited, stack) {
-  debug("visited is true now for src V" + srcVId);
-  visited.set(srcVId, true);
-
-  debug("iterate through dest Vs")
-  for (var destVId of srcToAllVerticesIds.get(srcVId)) {
-    debug("first dest V" + destVId);
-    if (visited.get(destVId) === false) {
-      debug("Wow, it is dest and it hasn't been visited yet! Let's iterate its dests (into recursion)!");
-      _topologicalSortIn(destVId, srcToAllVerticesIds, visited, stack);
-    }
-  }
-  debug("list is empty for v" + srcVId);
-
-  stack.push(srcVId);
-  debug("stack = " + stack);
-}
-
 function printMap(map) {
   for ([k,v] of map) {
     info("k=" + k + ", v=" + v);
   }
 }
 
-function longestPath(graph, vFromId, topSortedVertices) {
-  debug("mark all as -infinity and source as 0");
-  var srcVerticeToEdges = graph.getSrcVerticeIdToEdges();
-  var idToVerticeMap = graph.getIdToVerticeMap();
-  var longestPath = new Map();
-  for (var srcVId of srcVerticeToEdges.keys()) {
-    longestPath.set(srcVId, Number.NEGATIVE_INFINITY);
-  }
-  longestPath.set(vFromId, idToVerticeMap.get(vFromId).weight);
-
-  debug("find longest path for all vertices");
-
-  while (topSortedVertices.length > 0) {
-    var curV = topSortedVertices.pop();
-    debug("curV = v" + curV);
-    if (longestPath.get(curV) !== Number.NEGATIVE_INFINITY) {
-      debug("longestPath.get(curV) !== Number.NEGATIVE_INFINITY");
-      for (var e of srcVerticeToEdges.get(curV)) {
-        debug("e = " + e.id);
-        debug("e.src = " + e.src);
-        debug("e.dest = " + e.dest);
-        debug("longestPath[e.dest] = " + longestPath.get(e.dest));
-        debug("graph.vertices[e.dest] = " + graph.vertices[e.dest]);
-        if (longestPath.get(e.dest) < longestPath.get(curV) + e.weight + idToVerticeMap.get(e.dest).weight) {
-          longestPath.set(e.dest, longestPath.get(curV) + e.weight + idToVerticeMap.get(e.dest).weight);
-        }
-      }
-    }
-  }
-
-  return longestPath;
+function sortMapByValuesDesc(map) {
+  return new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
 }
 
+function sortMapByValuesAsc(map) {
+  return new Map([...map.entries()].sort((a, b) => a[1] - b[1]));
+}
+
+function getKeyValuePairByMaxValue(map) {
+  var maxKey = map.keys().next().value;
+  var maxValue = map.get(maxKey);
+  var maxPair = [maxKey, maxValue];
+  debug("maxPair = " + maxPair);
+  for ([k, v] of map) {
+    debug("[k,v]=[" + k + ", " + v + "]");
+    if (maxPair[1] < v) {
+      maxPair = [k, v];
+    }
+  }
+  return maxPair;
+}
 
 function example1() {
   /* GRAPH 1 OK! */
+  info("G1");
   var g1 = graph1();
   g1.printGraph();
-  var topologicalSortedArray1 = topologicalSort(g1);
-  info("topologicalSortedArray = " + topologicalSortedArray1);
+  var topologicalSortedArray1 = g1.topologicalSort();
+  info("topologicalSortedArray (stack mode) = " + topologicalSortedArray1);
   var srcV1G1Id = g1.vertices[0].id;
-  var longestPath1 = longestPath(g1, srcV1G1Id, topologicalSortedArray1);
+  var longestPath1 = g1.longestPath(srcV1G1Id);
   info("longest path for v" + srcV1G1Id + " from g1");
   printMap(longestPath1);
 
   /* GRAPH 2 OK! */
+  info("G2");
   var g2 = graph2();
   g2.printGraph();
-  var topologicalSortedArray2 = topologicalSort(g2);
-  info("topologicalSortedArray = " + topologicalSortedArray2);
+  var topologicalSortedArray2 = g2.topologicalSort();
+  info("topologicalSortedArray (stack mode) = " + topologicalSortedArray2);
   var srcV1G2Id = g2.vertices[0].id;
-  var longestPath2 = longestPath(g2, srcV1G2Id, topologicalSortedArray2);
+  var longestPath2 = g2.longestPath(srcV1G2Id);
   info("longest path for v" + srcV1G2Id + " from g2");
   printMap(longestPath2);
 
   /* GRAPH 3 OK!*/
+  info("G3");
   var g3 = graph3();
   g3.printGraph();
-  var topologicalSortedArray3 = topologicalSort(g3);
-  info("topologicalSortedArray = " + topologicalSortedArray3);
+  var topologicalSortedArray3 = g3.topologicalSort();
+  info("topologicalSortedArray (stack mode) = " + topologicalSortedArray3);
   var srcV1G3Id = g3.vertices[0].id;
-  var longestPath3 = longestPath(g3, srcV1G3Id, topologicalSortedArray3);
+  var longestPath3 = g3.longestPath(srcV1G3Id);
   info("longest path for v" + srcV1G3Id + " from g3");
   printMap(longestPath3);
+
+  // var 3. desc [vanilla critical path (from specified v to end of the graph)]
+  info("=========");
+  var queueCriticalPathDesc = new Map();
+  for (var v of g1.vertices) {
+    var crit = g1.longestPath(v.id);
+    queueCriticalPathDesc.set(v.id, getKeyValuePairByMaxValue(crit)[1]);
+  }
+  info("queueCriticalPathDesc");
+  printMap(queueCriticalPathDesc);
+  info("after sort");
+  printMap(sortMapByValuesDesc(queueCriticalPathDesc));
+  info("after sort ASC");
+  printMap(sortMapByValuesAsc(queueCriticalPathDesc));
+
+  // var 16. asc [critical path from graph begin to specified v]. we should iterate all start edges and choose max for each edge
+  // 1. get start vertices
+  var nonStartVerticeIds = [];
+  var srcToAllVerticesIds = g1.getSrcToAllVerticesIds();
+  for (var [k, v] of srcToAllVerticesIds) {
+    for (var vv of v) {
+      nonStartVerticeIds.push(vv);
+    }
+  }
+  nonStartVerticeIds = new Set(nonStartVerticeIds);
+  debug("nonStartVerticeIds = " + nonStartVerticeIds.toString());
+
+  var startVerticeIds = [];
+  for (var v of g1.vertices) {
+    if (!nonStartVerticeIds.has(v.id)) {
+      startVerticeIds.push(v.id);
+    }
+  }
+  debug("StartVerticeIds = " + startVerticeIds.toString());
+
+  // 2. Find max paths for each vertex.
+  var queueCriticalPathAsc = new Map();
+  for (var v of g1.vertices) {
+    queueCriticalPathAsc.set(v.id, Number.NEGATIVE_INFINITY);
+  }
+
+  for (var v of startVerticeIds) {
+    var crit = g1.longestPath(v);
+    for (var [k, vv] of crit) {
+      if (queueCriticalPathAsc.get(k) < vv) {
+        queueCriticalPathAsc.set(k, vv);
+      }
+    }
+  }
+  info("queueCriticalPathAsc");
+  printMap(queueCriticalPathAsc);
+  info("after sort");
+  printMap(sortMapByValuesDesc(queueCriticalPathAsc));
+  info("after sort ASC");
+  printMap(sortMapByValuesAsc(queueCriticalPathAsc));
 
 }
 
