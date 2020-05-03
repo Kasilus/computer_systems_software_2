@@ -13,6 +13,7 @@
 <button type="button" onclick="example1()">Push me...</button>
 <button type="button" onclick="saveCy()">Save to file</button>
 <button type="button" onclick="load()">Load from file</button>
+<button type="button" onclick="clearCyEles()">Delete graph</button>
 <input type="file" id="file-input" />
 <h3>Contents of the file:</h3>
 <pre id="file-content"></pre>
@@ -277,23 +278,32 @@
       if (keyName === 'Delete') {
         var selected = cy.$(':selected');
         for (var el of selected) {
+          const id = parseInt(el.id());
           if (el.isNode()) {
-            removedIds_w.push(el.id());
+            removedIds_w.push(id);
             var conEdges = el.connectedEdges();
             console.log("conEdges size = " + conEdges.length);
             for (var conEdge of conEdges) {
-              removedIds_e.push(conEdge.id());
+              removedIds_e.push(parseInt(conEdge.id()));
             }
 
           } else {
-            removedIds_e.push(el.id());
+            removedIds_e.push(id);
           }
           el.remove();
         }
-        Array.prototype.unshift.apply(ids_w, removedIds_w.sort());
-        Array.prototype.unshift.apply(ids_e, removedIds_e.sort().reverse());
+
+        Array.prototype.unshift.apply(ids_w, removedIds_w);
+        ids_w = ids_w.sort(function(a, b){return a-b});
+        Array.prototype.unshift.apply(ids_e, removedIds_e);
+        ids_e = ids_e.sort(function(a, b){return b-a});
       }
     });
+  }
+
+  function clearCyEles() {
+    cy.elements().remove();
+    initIds();
   }
 
   document.getElementById('file-input')
