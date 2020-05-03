@@ -17,6 +17,10 @@
 <script src="./lib/cytoscape.min.js"></script>
 <script>
 
+  function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
   // init
   var ids_w = [];
   var ids_e = [];
@@ -126,7 +130,7 @@
     {
       console.log('tap on background');
       let weight = prompt('Enter weight for new node');
-      if (weight == null) {
+      if (!isNumeric(weight)) {
         return;
       }
       var x = evt.position['x'];
@@ -162,8 +166,8 @@
         if (el.isEdge()) {
           continue;
         }
-        let weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
-        if (weight == null) {
+        var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+        if (!isNumeric(weight)) {
           return;
         }
         var id = ids_e.shift();
@@ -209,3 +213,4 @@
 </script>
 </body>
 </html>
+it
