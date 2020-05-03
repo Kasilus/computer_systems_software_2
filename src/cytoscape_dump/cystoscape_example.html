@@ -11,6 +11,11 @@
 </head>
 <body>
 <button type="button" onclick="example1()">Push me...</button>
+<button type="button" onclick="saveCy()">Save to file</button>
+<button type="button" onclick="load()">Load from file</button>
+<input type="file" id="file-input" />
+<h3>Contents of the file:</h3>
+<pre id="file-content"></pre>
 <div id='cy'></div>
 <script src="./graph.js">
 </script>
@@ -20,6 +25,55 @@
   function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
   }
+
+  function download(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+  }
+
+  function readSingleFile(e) {
+    var file = e.target.files[0];
+    if (!file) {
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var contents = e.target.result;
+      redrawCy(contents);
+    };
+    reader.readAsText(file);
+  }
+
+  function redrawCy(contents) {
+    cy.destroy();
+    cy = cytoscape({container: document.getElementById('cy')});
+    var cy_json = JSON.parse(contents);
+    cy.json(cy_json);
+  }
+
+  function redrawEles(contents) {
+    cy.elements().remove();
+    var cy_eles_json = JSON.parse(contents);
+    cy.json({elements: cy_eles_json});
+  }
+
+  function saveCy() {
+    var cy_json = cy.json();
+    var cy_json_str = JSON.stringify(cy_json);
+    console.log(cy_json);
+    download(cy_json_str, 'cy_json.txt', 'text/plain');
+  }
+
+  function saveEles() {
+    var cy_eles_json = cy.elements().jsons();
+    download(JSON.stringify(cy_eles_json), 'cy_eles_json.txt', 'text/plain');
+  }
+
+  document.getElementById('file-input')
+    .addEventListener('change', readSingleFile, false);
 
   // init
   var ids_w = [];
@@ -213,4 +267,3 @@
 </script>
 </body>
 </html>
-it
