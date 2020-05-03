@@ -3,7 +3,7 @@
   <style type="text/css">
     #cy {
       width: 100%;
-      height: 1000px;
+      height: 500px;
       display: block;
       border: 1px solid black;
     }
@@ -21,6 +21,10 @@
 </script>
 <script src="./lib/cytoscape.min.js"></script>
 <script>
+
+  var ids_w;
+  var ids_e;
+  var cy;
 
   function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
@@ -52,6 +56,30 @@
     cy = cytoscape({container: document.getElementById('cy')});
     var cy_json = JSON.parse(contents);
     cy.json(cy_json);
+    addListeners(cy);
+
+    initIds();
+
+    var occupied_w = [];
+    var occupied_e = [];
+
+    for (var eles of cy.elements()) {
+      const id = parseInt(eles.id());
+      if (id > 0) {
+        occupied_w.push(id);
+      } else {
+        occupied_e.push(id);
+      }
+    }
+
+    ids_w = removeFromArray(ids_w, occupied_w);
+    ids_e = removeFromArray(ids_e, occupied_e);
+  }
+
+  function removeFromArray(arr, values) {
+    return arr.filter(function(value, index) {
+      return values.indexOf(value) == -1;
+    })
   }
 
   function redrawEles(contents) {
@@ -72,197 +100,212 @@
     download(JSON.stringify(cy_eles_json), 'cy_eles_json.txt', 'text/plain');
   }
 
-  document.getElementById('file-input')
-    .addEventListener('change', readSingleFile, false);
-
-  // init
-  var ids_w = [];
-  var ids_e = [];
-  for (var i = 1; i <= 1000; i++) {
-    ids_w.push(i);
-    ids_e.push(-i);
+  function initIds() {
+    ids_w = [];
+    ids_e = [];
+    for (var i = 1; i <= 1000; i++) {
+      ids_w.push(i);
+      ids_e.push(-i);
+    }
   }
 
-  var cy = cytoscape({
-    container: document.getElementById('cy'),
+  function initCyDummy() {
+    return cytoscape({
+      container: document.getElementById('cy'),
 
-    minZoom: 0.5,
-    maxZoom: 0.6,
+      minZoom: 0.5,
+      maxZoom: 0.6,
 
-    elements: [
-      {
-        data: {
-          id: ids_w.shift(),
-          weight: 5,
-          name: 'n1, w=5',
-        }
-      },
-      {
-        data: {
-          id: ids_w.shift(),
-          weight: 15,
-          name: 'n2, w=15'
-        }
-      },
-      {
-        data: {
-          id: ids_e.shift(),
-          weight: 30,
-          name: 'e1, w=30',
-          source: '1',
-          target: '2'
-        }
-      }
-    ],
-
-    style: [
-      {
-        selector: 'node',
-        style: {
-          'background-color': '#666',
-          'label': 'data(name)',
-        }
-      },
-
-      {
-        selector: 'edge',
-        style: {
-          'width': 3,
-          'line-color': '#ccc',
-          'target-arrow-color': '#ccc',
-          'target-arrow-shape': 'triangle',
-          'curve-style': 'bezier',
-          'label': 'data(name)'
-        }
-      },
-
-      {
-        selector: ':selected',
-        style: {
-          'background-color': 'SteelBlue',
-          'line-color': 'SteelBlue',
-          'target-arrow-color': 'SteelBlue',
-        }
-      }
-    ],
-
-    layout: {
-      name: 'grid',
-      rows: 1
-    }
-
-  });
-  var node = {
-    data: {
-      id: ids_w.shift(),
-      weight: 2,
-      name: 'n3, w=2'
-    }
-  };
-  cy.add(node);
-  var edge = {
-    data : {
-      id: ids_e.shift(),
-      weight: 999,
-      name: 'e2, w=999',
-      source: '2',
-      target: '3'
-    }
-  };
-  cy.add(edge);
-  cy.on('tap', 'node', function(evt) {
-    var node = evt.target;
-    console.log('tapped ' + node.id());
-  });
-  cy.on('tap', 'edge', function(evt) {
-    var node = evt.target;
-    console.log('tapped ' + node.id());
-  });
-  cy.on('tap', function(evt) {
-    var evtTarget = evt.target;
-    if( evtTarget === cy )
-    {
-      console.log('tap on background');
-      let weight = prompt('Enter weight for new node');
-      if (!isNumeric(weight)) {
-        return;
-      }
-      var x = evt.position['x'];
-      var y = evt.position['y'];
-      console.log(`weight of new node = ${weight}`);
-      console.log(`tapped position: (${x},${y})`);
-      var newId = ids_w.shift();
-      var node = {
-        data: {
-          id: newId,
-          weight: weight,
-          name: 'n' + newId + ', w=' + weight
+      elements: [
+        {
+          data: {
+            id: ids_w.shift(),
+            weight: 5,
+            name: 'n1, w=5',
+          }
         },
-        position: {
-          x: x,
-          y: y
+        {
+          data: {
+            id: ids_w.shift(),
+            weight: 15,
+            name: 'n2, w=15'
+          }
+        },
+        {
+          data: {
+            id: ids_w.shift(),
+            weight: 2,
+            name: 'n3, w=2'
+          }
+        },
+        {
+          data: {
+            id: ids_e.shift(),
+            weight: 30,
+            name: 'e1, w=30',
+            source: '1',
+            target: '2'
+          }
+        },
+        {
+          data: {
+            id: ids_e.shift(),
+            weight: 999,
+            name: 'e2, w=999',
+            source: '2',
+            target: '3'
+          }
         }
-      };
-      cy.add(node);
-    }
-    else
-    {
-      console.log('tap on element');
-      console.log('is selected? = ' + evtTarget.selected());
-    }
-  });
-  cy.on('cxttapstart', function(evt) {
-    console.log('right mouse click');
-    var evtTarget = evt.target;
-    if( evtTarget !== cy && evtTarget.isNode() ) {
-      var selected = cy.$(':selected');
-      for (var el of selected) {
-        if (el.isEdge()) {
-          continue;
+      ],
+
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'background-color': '#666',
+            'label': 'data(name)',
+          }
+        },
+
+        {
+          selector: 'edge',
+          style: {
+            'width': 3,
+            'line-color': '#ccc',
+            'target-arrow-color': '#ccc',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'label': 'data(name)'
+          }
+        },
+
+        {
+          selector: ':selected',
+          style: {
+            'background-color': 'SteelBlue',
+            'line-color': 'SteelBlue',
+            'target-arrow-color': 'SteelBlue',
+          }
         }
-        var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+      ],
+
+      layout: {
+        name: 'grid',
+        rows: 1
+      }
+    });
+  }
+
+  function addListeners(cy) {
+    cy.on('tap', 'node', function(evt) {
+      var node = evt.target;
+      console.log('tapped ' + node.id());
+    });
+    cy.on('tap', 'edge', function(evt) {
+      var node = evt.target;
+      console.log('tapped ' + node.id());
+    });
+    // tap on background (create new node)
+    cy.on('tap', function(evt) {
+      var evtTarget = evt.target;
+      if( evtTarget === cy )
+      {
+        console.log('tap on background');
+        let weight = prompt('Enter weight for new node');
         if (!isNumeric(weight)) {
           return;
         }
-        var id = ids_e.shift();
-        var edge = {
-          data : {
-            id: id,
-            weight: weight,
-            name: 'e' + (-id) + ', w=' + weight,
-            source: el.id(),
-            target: evtTarget.id()
+        var x = evt.position['x'];
+        var y = evt.position['y'];
+        console.log(`weight of new node = ${weight}`);
+        console.log(`tapped position: (${x},${y})`);
+        var newId = ids_w.shift();
+        var node = {
+          data: {
+            id: newId,
+            weight: parseInt(weight),
+            name: 'n' + newId + ', w=' + weight
+          },
+          position: {
+            x: x,
+            y: y
           }
         };
-        cy.add(edge);
+        cy.add(node);
       }
-    }
-  });
-
-  document.addEventListener('keydown', (event) => {
-    const keyName = event.key;
-    var removedIds_w = [];
-    var removedIds_e = [];
-    if (keyName === 'Delete') {
-      var selected = cy.$(':selected');
-      for (var el of selected) {
-        if (el.isNode()) {
-          removedIds_w.push(el.id());
-          var conEdges = el.connectedEdges();
-          console.log("conEdges size = " + conEdges.length);
-          for (var conEdge of conEdges) {
-            removedIds_e.push(conEdge.id());
+      else
+      {
+        console.log('tap on element');
+        console.log('is selected? = ' + evtTarget.selected());
+      }
+    });
+    // right click (or double tap) on node
+    cy.on('cxttapstart', function(evt) {
+      console.log('right mouse click');
+      var evtTarget = evt.target;
+      if( evtTarget !== cy && evtTarget.isNode() ) {
+        var selected = cy.$(':selected');
+        for (var el of selected) {
+          if (el.isEdge()) {
+            continue;
           }
-
-        } else {
-          removedIds_e.push(el.id());
+          var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+          if (!isNumeric(weight)) {
+            return;
+          }
+          var id = ids_e.shift();
+          var edge = {
+            data : {
+              id: id,
+              weight: parseInt(weight),
+              name: 'e' + (-id) + ', w=' + weight,
+              source: el.id(),
+              target: evtTarget.id()
+            }
+          };
+          cy.add(edge);
         }
-        el.remove();
       }
-      Array.prototype.unshift.apply(ids_w, removedIds_w.sort());
-      Array.prototype.unshift.apply(ids_e, removedIds_e.sort().reverse());
-    }
-  });
+    });
+  }
+
+  function addOnDeleteListener() {
+    document.addEventListener('keydown', (event) => {
+      const keyName = event.key;
+      var removedIds_w = [];
+      var removedIds_e = [];
+      if (keyName === 'Delete') {
+        var selected = cy.$(':selected');
+        for (var el of selected) {
+          if (el.isNode()) {
+            removedIds_w.push(el.id());
+            var conEdges = el.connectedEdges();
+            console.log("conEdges size = " + conEdges.length);
+            for (var conEdge of conEdges) {
+              removedIds_e.push(conEdge.id());
+            }
+
+          } else {
+            removedIds_e.push(el.id());
+          }
+          el.remove();
+        }
+        Array.prototype.unshift.apply(ids_w, removedIds_w.sort());
+        Array.prototype.unshift.apply(ids_e, removedIds_e.sort().reverse());
+      }
+    });
+  }
+
+  document.getElementById('file-input')
+    .addEventListener('change', readSingleFile, false);
+
+
+  initIds();
+
+  cy = initCyDummy();
+  addListeners(cy);
+
+  addOnDeleteListener();
 
 </script>
 </body>
