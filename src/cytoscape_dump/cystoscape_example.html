@@ -1,159 +1,202 @@
 <html>
-	<head>
-		<style type="text/css">
-			#cy {
-			  width: 100%;
-			  height: 1000px;
-			  display: block;
-			  border: 1px solid black;
-			}
-		</style>
-	</head>
-	<body>
-		<button type="button" onclick="example1()">Push me...</button>
-		<div id='cy'></div>
-		<script src="./graph.js">
-		</script>
-		<script src="./lib/cytoscape.min.js"></script>
-		<script>
-			var ids_w = [];
-			var ids_e = [];
-			for (var i = 1; i <= 1000; i++) {
-				ids_w.push(i);
-				ids_e.push(-i);
-			}
-			
-			var cy = cytoscape({
-				container: document.getElementById('cy'),
-				
-				minZoom: 0.5,
-				maxZoom: 0.6,
-								
-				elements: [
-					{
-						data: { 
-							id: ids_w.shift(),
-							weight: 5,
-							name: 'v1, w=5'
-						}
-					},
-					{
-						data: { 
-							id: ids_w.shift(),
-							weight: 15,
-							name: 'v2, w=15'						
-						}
-					},
-					{
-						data: {
-							id: ids_e.shift(),
-							weight: 30,
-							name: 'e1, w=30',
-							source: '1',
-							target: '2'
-						}
-					}
-				],
-				
-				style: [
-					{ 
-						selector: 'node',
-						style: {
-							'background-color': '#666',
-							'label': 'data(name)'
-						}
-					},
-					
-					{
-						selector: 'edge',
-						style: {
-							'width': 3,
-							'line-color': '#ccc',
-							'target-arrow-color': '#ccc',
-							'target-arrow-shape': 'triangle',
-							'curve-style': 'bezier',
-							'label': 'data(name)'
-						}
-					}
-				],
-				
-				layout: {
-					name: 'grid',
-					rows: 1
-				}
-				
-			});
-			var node = {
-				data: {
-					id: ids_w.shift(),
-					weight: 2,
-					name: 'v3, w=2'
-				}
-			};
-			cy.add(node);
-			var edge = {
-				data : {
-					id: ids_e.shift(),
-					weight: 999,
-					name: 'e2, w=999',
-					source: '2',
-					target: '3'
-				}
-			};
-			cy.add(edge);
-			cy.on('tap', 'node', function(evt) {
-				var node = evt.target;
-				console.log('tapped ' + node.id());
-			});
-			cy.on('tap', 'edge', function(evt) {
-				var node = evt.target;
-				console.log('tapped ' + node.id());
-			});
-			cy.on('tap', function(evt) {
-				var evtTarget = evt.target;
-				if( evtTarget === cy ) 
-				{
-					console.log('tap on background');
-					let weight = prompt('Enter weight');
-					if (weight == null) {
-						return;
-					}
-					var x = evt.position['x'];
-					var y = evt.position['y'];
-					console.log(`weight of new node = ${weight}`);
-					console.log(`tapped position: (${x},${y})`);
-					var newId = ids_w.shift();
-					var node = {
-						data: {
-							id: newId,
-							weight: weight,
-							name: 'v' + newId + ', w=' + weight
-						},
-						position: {
-							x: x,
-							y: y
-						}
-					};
-					cy.add(node);
-				}
-				else
-				{
-					console.log('tap on element');
-					console.log('is selected? = ' + evtTarget.selected());
-				}
-			});
+<head>
+  <style type="text/css">
+    #cy {
+      width: 100%;
+      height: 1000px;
+      display: block;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+<button type="button" onclick="example1()">Push me...</button>
+<div id='cy'></div>
+<script src="./graph.js">
+</script>
+<script src="./lib/cytoscape.min.js"></script>
+<script>
 
-			document.addEventListener('keydown', (event) => {
-				const keyName = event.key;
-				var removedIds_w = [];
-				var removedIds_e = [];
-				if (keyName === 'Delete') {
-					var selected = cy.$(':selected');
-					for (var el of selected) {
-						el.remove();
-					}
-				}
-			});
-		</script>
-	</body>
+  function isNode(el) {
+    return el.id() > 0;
+  }
+
+  function isEdge(el) {
+    return el.id() < 0;
+  }
+
+  var ids_w = [];
+  var ids_e = [];
+  for (var i = 1; i <= 1000; i++) {
+    ids_w.push(i);
+    ids_e.push(-i);
+  }
+
+  var cy = cytoscape({
+    container: document.getElementById('cy'),
+
+    minZoom: 0.5,
+    maxZoom: 0.6,
+
+    elements: [
+      {
+        data: {
+          id: ids_w.shift(),
+          weight: 5,
+          name: 'v1, w=5',
+        }
+      },
+      {
+        data: {
+          id: ids_w.shift(),
+          weight: 15,
+          name: 'v2, w=15'
+        }
+      },
+      {
+        data: {
+          id: ids_e.shift(),
+          weight: 30,
+          name: 'e1, w=30',
+          source: '1',
+          target: '2'
+        }
+      }
+    ],
+
+    style: [
+      {
+        selector: 'node',
+        style: {
+          'background-color': '#666',
+          'label': 'data(name)',
+        }
+      },
+
+      {
+        selector: 'edge',
+        style: {
+          'width': 3,
+          'line-color': '#ccc',
+          'target-arrow-color': '#ccc',
+          'target-arrow-shape': 'triangle',
+          'curve-style': 'bezier',
+          'label': 'data(name)'
+        }
+      },
+
+      {
+        selector: ':selected',
+        style: {
+          'background-color': 'SteelBlue',
+          'line-color': 'SteelBlue',
+          'target-arrow-color': 'SteelBlue',
+        }
+      }
+    ],
+
+    layout: {
+      name: 'grid',
+      rows: 1
+    }
+
+  });
+  var node = {
+    data: {
+      id: ids_w.shift(),
+      weight: 2,
+      name: 'v3, w=2'
+    }
+  };
+  cy.add(node);
+  var edge = {
+    data: {
+      id: ids_e.shift(),
+      weight: 999,
+      name: 'e2, w=999',
+      source: '2',
+      target: '3'
+    }
+  };
+  cy.add(edge);
+  cy.on('tap', 'node', function (evt) {
+    var node = evt.target;
+    console.log('tapped ' + node.id());
+  });
+  cy.on('tap', 'edge', function (evt) {
+    var node = evt.target;
+    console.log('tapped ' + node.id());
+  });
+  cy.on('tap', function (evt) {
+    var evtTarget = evt.target;
+    if (evtTarget === cy) {
+      console.log('tap on background');
+      let weight = prompt('Enter weight');
+      if (weight == null) {
+        return;
+      }
+      var x = evt.position['x'];
+      var y = evt.position['y'];
+      console.log(`weight of new node = ${weight}`);
+      console.log(`tapped position: (${x},${y})`);
+      var newId = ids_w.shift();
+      var node = {
+        data: {
+          id: newId,
+          weight: weight,
+          name: 'v' + newId + ', w=' + weight
+        },
+        position: {
+          x: x,
+          y: y
+        }
+      };
+      cy.add(node);
+    } else {
+      console.log('tap on element');
+      console.log('is selected? = ' + evtTarget.selected());
+    }
+  });
+  cy.on('cxttapstart', function (evt) {
+    console.log('right mouse click');
+    var evtTarget = evt.target;
+    if (evtTarget !== cy && isNode(evtTarget)) {
+      var selected = cy.$(':selected');
+      for (var el of selected) {
+        if (isEdge(el)) {
+          continue;
+        }
+        let weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+        if (weight == null) {
+          return;
+        }
+        var id = ids_e.shift();
+        var edge = {
+          data: {
+            id: id,
+            weight: weight,
+            name: 'e' + (-id) + ', w=' + weight,
+            source: el.id(),
+            target: evtTarget.id()
+          }
+        };
+        cy.add(edge);
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const keyName = event.key;
+    var removedIds_w = [];
+    var removedIds_e = [];
+    if (keyName === 'Delete') {
+      var selected = cy.$(':selected');
+      for (var el of selected) {
+        el.remove();
+      }
+    }
+  });
+
+</script>
+</body>
 </html>
