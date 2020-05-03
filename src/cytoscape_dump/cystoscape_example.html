@@ -17,14 +17,7 @@
 <script src="./lib/cytoscape.min.js"></script>
 <script>
 
-  function isNode(el) {
-    return el.id() > 0;
-  }
-
-  function isEdge(el) {
-    return el.id() < 0;
-  }
-
+  // init
   var ids_w = [];
   var ids_e = [];
   for (var i = 1; i <= 1000; i++) {
@@ -43,14 +36,14 @@
         data: {
           id: ids_w.shift(),
           weight: 5,
-          name: 'v1, w=5',
+          name: 'n1, w=5',
         }
       },
       {
         data: {
           id: ids_w.shift(),
           weight: 15,
-          name: 'v2, w=15'
+          name: 'n2, w=15'
         }
       },
       {
@@ -105,12 +98,12 @@
     data: {
       id: ids_w.shift(),
       weight: 2,
-      name: 'v3, w=2'
+      name: 'n3, w=2'
     }
   };
   cy.add(node);
   var edge = {
-    data: {
+    data : {
       id: ids_e.shift(),
       weight: 999,
       name: 'e2, w=999',
@@ -119,19 +112,20 @@
     }
   };
   cy.add(edge);
-  cy.on('tap', 'node', function (evt) {
+  cy.on('tap', 'node', function(evt) {
     var node = evt.target;
     console.log('tapped ' + node.id());
   });
-  cy.on('tap', 'edge', function (evt) {
+  cy.on('tap', 'edge', function(evt) {
     var node = evt.target;
     console.log('tapped ' + node.id());
   });
-  cy.on('tap', function (evt) {
+  cy.on('tap', function(evt) {
     var evtTarget = evt.target;
-    if (evtTarget === cy) {
+    if( evtTarget === cy )
+    {
       console.log('tap on background');
-      let weight = prompt('Enter weight');
+      let weight = prompt('Enter weight for new node');
       if (weight == null) {
         return;
       }
@@ -144,7 +138,7 @@
         data: {
           id: newId,
           weight: weight,
-          name: 'v' + newId + ', w=' + weight
+          name: 'n' + newId + ', w=' + weight
         },
         position: {
           x: x,
@@ -152,18 +146,20 @@
         }
       };
       cy.add(node);
-    } else {
+    }
+    else
+    {
       console.log('tap on element');
       console.log('is selected? = ' + evtTarget.selected());
     }
   });
-  cy.on('cxttapstart', function (evt) {
+  cy.on('cxttapstart', function(evt) {
     console.log('right mouse click');
     var evtTarget = evt.target;
-    if (evtTarget !== cy && isNode(evtTarget)) {
+    if( evtTarget !== cy && evtTarget.isNode() ) {
       var selected = cy.$(':selected');
       for (var el of selected) {
-        if (isEdge(el)) {
+        if (el.isEdge()) {
           continue;
         }
         let weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
@@ -172,7 +168,7 @@
         }
         var id = ids_e.shift();
         var edge = {
-          data: {
+          data : {
             id: id,
             weight: weight,
             name: 'e' + (-id) + ', w=' + weight,
@@ -192,8 +188,21 @@
     if (keyName === 'Delete') {
       var selected = cy.$(':selected');
       for (var el of selected) {
+        if (el.isNode()) {
+          removedIds_w.push(el.id());
+          var conEdges = el.connectedEdges();
+          console.log("conEdges size = " + conEdges.length);
+          for (var conEdge of conEdges) {
+            removedIds_e.push(conEdge.id());
+          }
+
+        } else {
+          removedIds_e.push(el.id());
+        }
         el.remove();
       }
+      Array.prototype.unshift.apply(ids_w, removedIds_w.sort());
+      Array.prototype.unshift.apply(ids_e, removedIds_e.sort().reverse());
     }
   });
 
