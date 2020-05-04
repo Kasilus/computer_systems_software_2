@@ -12,11 +12,8 @@
 <body>
 <button type="button" onclick="example1()">Push me...</button>
 <button type="button" onclick="saveCy()">Save to file</button>
-<button type="button" onclick="load()">Load from file</button>
+<button type="button" onclick="loadCy()">Load from file</button>
 <button type="button" onclick="clearCyEles()">Delete graph</button>
-<input type="file" id="file-input" />
-<h3>Contents of the file:</h3>
-<pre id="file-content"></pre>
 <div id='cy'></div>
 <script src="./graph.js">
 </script>
@@ -27,10 +24,19 @@
   var ids_e;
   var cy;
 
+  // to utils.js
   function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
   }
 
+  function loadCy() {
+    var input = document.createElement("input");
+    input.type = "file";
+    input.addEventListener('change', readSingleFile, false);
+    input.click();
+  }
+
+  // to utils.js
   function download(content, fileName, contentType) {
     var a = document.createElement("a");
     var file = new Blob([content], {type: contentType});
@@ -39,6 +45,7 @@
     a.click();
   }
 
+  // to utils.js
   function readSingleFile(e) {
     var file = e.target.files[0];
     if (!file) {
@@ -77,6 +84,7 @@
     ids_e = removeFromArray(ids_e, occupied_e);
   }
 
+  // to utils.js
   function removeFromArray(arr, values) {
     return arr.filter(function(value, index) {
       return values.indexOf(value) == -1;
@@ -92,7 +100,6 @@
   function saveCy() {
     var cy_json = cy.json();
     var cy_json_str = JSON.stringify(cy_json);
-    console.log(cy_json);
     download(cy_json_str, 'cy_json.txt', 'text/plain');
   }
 
@@ -305,10 +312,6 @@
     cy.elements().remove();
     initIds();
   }
-
-  document.getElementById('file-input')
-    .addEventListener('change', readSingleFile, false);
-
 
   initIds();
 
