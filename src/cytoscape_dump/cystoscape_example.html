@@ -313,12 +313,28 @@
     initIds();
   }
 
+  function transformCyGraph(cy) {
+    var g = new Graph();
+    // set vertices
+    var nodes = cy.nodes();
+    for (var node of nodes) {
+      g.addVertex(new Vertex(node.data("id"), node.data("weight")));
+    }
+    // set edges
+    var edges = cy.edges();
+    for (var edge of edges) {
+      g.addEdge(new Edge(-edge.data("id"), edge.data("weight"), edge.data("source"), edge.data("target")));
+    }
+  }
+
   initIds();
 
   cy = initCyDummy();
   addListeners(cy);
 
   addOnDeleteListener();
+
+  transformCyGraph(cy);
 
 </script>
 </body>
