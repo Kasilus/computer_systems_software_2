@@ -155,6 +155,46 @@ class Graph {
     return longestPath;
   }
 
+  isCyclic() {
+    var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
+    console.log(srcToAllVerticesIds);
+    var stack = [];
+    var visited = [];
+
+    for (var srcVId of srcToAllVerticesIds.keys()) {
+      if (this._isCyclic(srcVId, srcToAllVerticesIds, visited, stack)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _isCyclic(srcVId, srcToAllVerticesIds, visited, stack) {
+    if (stack.indexOf(srcVId) !== -1) {
+      return true;
+    }
+    if (visited.indexOf(srcVId) !== -1) {
+      return false;
+    }
+
+    stack.push(srcVId);
+    visited.push(srcVId);
+
+    var destVertices = srcToAllVerticesIds.get(srcVId);
+
+    for (var destVId of destVertices) {
+      if(this._isCyclic(destVId, srcToAllVerticesIds, visited, stack)) {
+        return true;
+      };
+    }
+
+    var index = stack.indexOf(srcVId);
+    if (index !== -1) stack.splice(index, 1);
+
+    return false;
+  }
+
   printGraph() {
     var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
     for (var srcVId of srcToAllVerticesIds.keys()) {

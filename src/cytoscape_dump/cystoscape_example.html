@@ -65,7 +65,10 @@
     var cy_json = JSON.parse(contents);
     cy.json(cy_json);
     addListeners(cy);
+    initIdsConsideringExistCy();
+  }
 
+  function initIdsConsideringExistCy() {
     initIds();
 
     var occupied_w = [];
@@ -252,6 +255,7 @@
       console.log('right mouse click');
       var evtTarget = evt.target;
       if( evtTarget !== cy && evtTarget.isNode() ) {
+        var cyJson = cy.json();
         var selected = cy.$(':selected');
         for (var el of selected) {
           if (el.isEdge()) {
@@ -273,6 +277,16 @@
           };
           cy.add(edge);
         }
+
+        var g = transformCyGraph(cy);
+        var isCyclic = g.isCyclic();
+        if (isCyclic) {
+          alert('Graph has a cycle now. Back to the previous state...');
+          cy.json(cyJson);
+          initIdsConsideringExistCy();
+        }
+
+        console.log("isCyclic = " + isCyclic);
       }
     });
   }
@@ -325,6 +339,7 @@
     for (var edge of edges) {
       g.addEdge(new Edge(-edge.data("id"), edge.data("weight"), edge.data("source"), edge.data("target")));
     }
+    return g;
   }
 
   initIds();
