@@ -13,343 +13,42 @@
 <button type="button" onclick="example1()">Push me...</button>
 <button type="button" onclick="saveCy()">Save to file</button>
 <button type="button" onclick="loadCy()">Load from file</button>
-<button type="button" onclick="clearCyEles()">Delete graph</button>
+<button type="button" onclick="deleteGraph()">Delete graph</button>
 <div id='cy'></div>
-<script src="./graph.js">
-</script>
+<script src="./graph.js"></script>
+<script src="./cy_graph.js"></script>
+<script src="./utils.js"></script>
+<script src="./cy_graph_i_o.js"></script>
 <script src="./lib/cytoscape.min.js"></script>
 <script>
-
-  var ids_w;
-  var ids_e;
-  var cy;
-
-  // to utils.js
-  function isNumeric(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  }
 
   function loadCy() {
     var input = document.createElement("input");
     input.type = "file";
-    input.addEventListener('change', readSingleFile, false);
+    input.addEventListener('change', readCy, false);
     input.click();
   }
 
-  // to utils.js
-  function download(content, fileName, contentType) {
-    var a = document.createElement("a");
-    var file = new Blob([content], {type: contentType});
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
-  }
-
-  // to utils.js
-  function readSingleFile(e) {
-    var file = e.target.files[0];
-    if (!file) {
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var contents = e.target.result;
-      redrawCy(contents);
-    };
-    reader.readAsText(file);
-  }
-
-  function redrawCy(contents) {
-    cy.destroy();
-    cy = cytoscape({container: document.getElementById('cy')});
-    var cy_json = JSON.parse(contents);
-    cy.json(cy_json);
-    addListeners(cy);
-    initIdsConsideringExistCy();
-  }
-
-  function initIdsConsideringExistCy() {
-    initIds();
-
-    var occupied_w = [];
-    var occupied_e = [];
-
-    for (var eles of cy.elements()) {
-      const id = parseInt(eles.id());
-      if (id > 0) {
-        occupied_w.push(id);
-      } else {
-        occupied_e.push(id);
-      }
-    }
-
-    ids_w = removeFromArray(ids_w, occupied_w);
-    ids_e = removeFromArray(ids_e, occupied_e);
-  }
-
-  // to utils.js
-  function removeFromArray(arr, values) {
-    return arr.filter(function(value, index) {
-      return values.indexOf(value) == -1;
-    })
-  }
-
-  function redrawEles(contents) {
-    cy.elements().remove();
-    var cy_eles_json = JSON.parse(contents);
-    cy.json({elements: cy_eles_json});
+  function readCy(e) {
+    readSingleFile(e, cyGraph.redrawCy.bind(cyGraph));
   }
 
   function saveCy() {
-    var cy_json = cy.json();
+    var cy_json = cyGraph.cy.json();
     var cy_json_str = JSON.stringify(cy_json);
     download(cy_json_str, 'cy_json.txt', 'text/plain');
   }
 
   function saveEles() {
-    var cy_eles_json = cy.elements().jsons();
+    var cy_eles_json = cyGraph.cy.elements().jsons();
     download(JSON.stringify(cy_eles_json), 'cy_eles_json.txt', 'text/plain');
   }
 
-  function initIds() {
-    ids_w = [];
-    ids_e = [];
-    for (var i = 1; i <= 1000; i++) {
-      ids_w.push(i);
-      ids_e.push(-i);
-    }
+  function deleteGraph() {
+    cyGraph.clearCyEles();
   }
 
-  function initCyDummy() {
-    return cytoscape({
-      container: document.getElementById('cy'),
-
-      minZoom: 0.5,
-      maxZoom: 0.6,
-
-      elements: [
-        {
-          data: {
-            id: ids_w.shift(),
-            weight: 5,
-            name: 'n1, w=5',
-          }
-        },
-        {
-          data: {
-            id: ids_w.shift(),
-            weight: 15,
-            name: 'n2, w=15'
-          }
-        },
-        {
-          data: {
-            id: ids_w.shift(),
-            weight: 2,
-            name: 'n3, w=2'
-          }
-        },
-        {
-          data: {
-            id: ids_e.shift(),
-            weight: 30,
-            name: 'e1, w=30',
-            source: '1',
-            target: '2'
-          }
-        },
-        {
-          data: {
-            id: ids_e.shift(),
-            weight: 999,
-            name: 'e2, w=999',
-            source: '2',
-            target: '3'
-          }
-        }
-      ],
-
-      style: [
-        {
-          selector: 'node',
-          style: {
-            'background-color': '#666',
-            'label': 'data(name)',
-          }
-        },
-
-        {
-          selector: 'edge',
-          style: {
-            'width': 3,
-            'line-color': '#ccc',
-            'target-arrow-color': '#ccc',
-            'target-arrow-shape': 'triangle',
-            'curve-style': 'bezier',
-            'label': 'data(name)'
-          }
-        },
-
-        {
-          selector: ':selected',
-          style: {
-            'background-color': 'SteelBlue',
-            'line-color': 'SteelBlue',
-            'target-arrow-color': 'SteelBlue',
-          }
-        }
-      ],
-
-      layout: {
-        name: 'grid',
-        rows: 1
-      }
-    });
-  }
-
-  function addListeners(cy) {
-    cy.on('tap', 'node', function(evt) {
-      var node = evt.target;
-      console.log('tapped ' + node.id());
-    });
-    cy.on('tap', 'edge', function(evt) {
-      var node = evt.target;
-      console.log('tapped ' + node.id());
-    });
-    // tap on background (create new node)
-    cy.on('tap', function(evt) {
-      var evtTarget = evt.target;
-      if( evtTarget === cy )
-      {
-        console.log('tap on background');
-        let weight = prompt('Enter weight for new node');
-        if (!isNumeric(weight)) {
-          return;
-        }
-        var x = evt.position['x'];
-        var y = evt.position['y'];
-        console.log(`weight of new node = ${weight}`);
-        console.log(`tapped position: (${x},${y})`);
-        var newId = ids_w.shift();
-        var node = {
-          data: {
-            id: newId,
-            weight: parseInt(weight),
-            name: 'n' + newId + ', w=' + weight
-          },
-          position: {
-            x: x,
-            y: y
-          }
-        };
-        cy.add(node);
-      }
-      else
-      {
-        console.log('tap on element');
-        console.log('is selected? = ' + evtTarget.selected());
-      }
-    });
-    // right click (or double tap) on node
-    cy.on('cxttapstart', function(evt) {
-      console.log('right mouse click');
-      var evtTarget = evt.target;
-      if( evtTarget !== cy && evtTarget.isNode() ) {
-        var cyJson = cy.json();
-        var selected = cy.$(':selected');
-        for (var el of selected) {
-          if (el.isEdge()) {
-            continue;
-          }
-          var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
-          if (!isNumeric(weight)) {
-            return;
-          }
-          var id = ids_e.shift();
-          var edge = {
-            data : {
-              id: id,
-              weight: parseInt(weight),
-              name: 'e' + (-id) + ', w=' + weight,
-              source: el.id(),
-              target: evtTarget.id()
-            }
-          };
-          cy.add(edge);
-        }
-
-        var g = transformCyGraph(cy);
-        var isCyclic = g.isCyclic();
-        if (isCyclic) {
-          alert('Graph has a cycle now. Back to the previous state...');
-          cy.json(cyJson);
-          initIdsConsideringExistCy();
-        }
-
-        console.log("isCyclic = " + isCyclic);
-      }
-    });
-  }
-
-  function addOnDeleteListener() {
-    document.addEventListener('keydown', (event) => {
-      const keyName = event.key;
-      var removedIds_w = [];
-      var removedIds_e = [];
-      if (keyName === 'Delete') {
-        var selected = cy.$(':selected');
-        for (var el of selected) {
-          const id = parseInt(el.id());
-          if (el.isNode()) {
-            removedIds_w.push(id);
-            var conEdges = el.connectedEdges();
-            console.log("conEdges size = " + conEdges.length);
-            for (var conEdge of conEdges) {
-              removedIds_e.push(parseInt(conEdge.id()));
-            }
-
-          } else {
-            removedIds_e.push(id);
-          }
-          el.remove();
-        }
-
-        Array.prototype.unshift.apply(ids_w, removedIds_w);
-        ids_w = ids_w.sort(function(a, b){return a-b});
-        Array.prototype.unshift.apply(ids_e, removedIds_e);
-        ids_e = ids_e.sort(function(a, b){return b-a});
-      }
-    });
-  }
-
-  function clearCyEles() {
-    cy.elements().remove();
-    initIds();
-  }
-
-  function transformCyGraph(cy) {
-    var g = new Graph();
-    // set vertices
-    var nodes = cy.nodes();
-    for (var node of nodes) {
-      g.addVertex(new Vertex(node.data("id"), node.data("weight")));
-    }
-    // set edges
-    var edges = cy.edges();
-    for (var edge of edges) {
-      g.addEdge(new Edge(-edge.data("id"), edge.data("weight"), edge.data("source"), edge.data("target")));
-    }
-    return g;
-  }
-
-  initIds();
-
-  cy = initCyDummy();
-  addListeners(cy);
-
-  addOnDeleteListener();
-
-  transformCyGraph(cy);
+  var cyGraph = new CyGraph();
 
 </script>
 </body>

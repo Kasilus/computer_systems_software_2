@@ -208,34 +208,6 @@ class Graph {
   }
 }
 
-function printMap(map) {
-  for ([k,v] of map) {
-    info("k=" + k + ", v=" + v);
-  }
-}
-
-function sortMapByValuesDesc(map) {
-  return new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
-}
-
-function sortMapByValuesAsc(map) {
-  return new Map([...map.entries()].sort((a, b) => a[1] - b[1]));
-}
-
-function getKeyValuePairByMaxValue(map) {
-  var maxKey = map.keys().next().value;
-  var maxValue = map.get(maxKey);
-  var maxPair = [maxKey, maxValue];
-  debug("maxPair = " + maxPair);
-  for ([k, v] of map) {
-    debug("[k,v]=[" + k + ", " + v + "]");
-    if (maxPair[1] < v) {
-      maxPair = [k, v];
-    }
-  }
-  return maxPair;
-}
-
 function example1() {
   /* GRAPH 1 OK! */
   info("G1");
