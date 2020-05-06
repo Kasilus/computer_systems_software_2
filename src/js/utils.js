@@ -1,8 +1,8 @@
-function isNumeric(n) {
+export function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function download(content, fileName, contentType) {
+export function download(content, fileName, contentType) {
   var a = document.createElement("a");
   var file = new Blob([content], {type: contentType});
   a.href = URL.createObjectURL(file);
@@ -10,7 +10,7 @@ function download(content, fileName, contentType) {
   a.click();
 }
 
-function readSingleFile(e, bindCallback) {
+export function readSingleFile(e, bindCallback) {
   var file = e.target.files[0];
   if (!file) {
     return;
@@ -23,27 +23,27 @@ function readSingleFile(e, bindCallback) {
   reader.readAsText(file);
 }
 
-function removeFromArray(arr, values) {
+export function removeFromArray(arr, values) {
   return arr.filter(function(value, index) {
     return values.indexOf(value) == -1;
   })
 }
 
-function printMap(map) {
+export function printMap(map) {
   for ([k,v] of map) {
     console.log("k=" + k + ", v=" + v);
   }
 }
 
-function sortMapByValuesDesc(map) {
+export function sortMapByValuesDesc(map) {
   return new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
 }
 
-function sortMapByValuesAsc(map) {
+export function sortMapByValuesAsc(map) {
   return new Map([...map.entries()].sort((a, b) => a[1] - b[1]));
 }
 
-function getKeyValuePairByMaxValue(map) {
+export function getKeyValuePairByMaxValue(map) {
   var maxKey = map.keys().next().value;
   var maxValue = map.get(maxKey);
   var maxPair = [maxKey, maxValue];

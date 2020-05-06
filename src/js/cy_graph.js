@@ -1,10 +1,10 @@
-class CyGraph {
+import cytoscape from 'cytoscape';
+import {Vertex, Edge, Graph} from './graph';
+
+export default class CyGraph {
 
   constructor() {
     this.initIds();
-    this.cy = this.initCyDummy();
-    this.addListeners();
-    this.addOnDeleteListener();
   }
 
   initIds() {
@@ -35,9 +35,9 @@ class CyGraph {
     this.ids_e = removeFromArray(this.ids_e, occupied_e);
   }
 
-  initCyDummy() {
-    return cytoscape({
-      container: document.getElementById('cy'),
+  initCyDummy(container) {
+    this.cy = cytoscape({
+      container: container,
 
       minZoom: 0.5,
       maxZoom: 0.6,
@@ -80,106 +80,13 @@ class CyGraph {
     });
   }
 
-  addListeners() {
-    // tap on background (create new node)
-    this.cy.on('tap', function(evt) {
-      var evtTarget = evt.target;
-      if( evtTarget === this.cy )
-      {
-        let weight = prompt('Enter weight for new node');
-        if (!isNumeric(weight)) {
-          return;
-        }
-        var x = evt.position['x'];
-        var y = evt.position['y'];
-        var newId = this.ids_w.shift();
-        var node = {
-          data: {
-            id: newId,
-            weight: parseInt(weight),
-            name: 'n' + newId + ', w=' + weight
-          },
-          position: {
-            x: x,
-            y: y
-          }
-        };
-        this.cy.add(node);
-      }
-    });
-    this.cy.on('cxttapstart', function(evt) {
-      var evtTarget = evt.target;
-      if( evtTarget !== cy && evtTarget.isNode() ) {
-        var cyJson = this.cy.json();
-        var selected = this.cy.$(':selected');
-        for (var el of selected) {
-          if (el.isEdge()) {
-            continue;
-          }
-          var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
-          if (!isNumeric(weight)) {
-            return;
-          }
-          var id = this.ids_e.shift();
-          var edge = {
-            data : {
-              id: id,
-              weight: parseInt(weight),
-              name: 'e' + (-id) + ', w=' + weight,
-              source: el.id(),
-              target: evtTarget.id()
-            }
-          };
-          this.cy.add(edge);
-        }
-
-        var g = this.transformCyGraph();
-        var isCyclic = g.isCyclic();
-        if (isCyclic) {
-          alert('Graph has a cycle now. Back to the previous state...');
-          this.cy.json(cyJson);
-          this.initIdsConsideringExistCy();
-        }
-      }
-    });
-  }
-
-  addOnDeleteListener() {
-    document.addEventListener('keydown', (event) => {
-      const keyName = event.key;
-      var removedIds_w = [];
-      var removedIds_e = [];
-      if (keyName === 'Delete') {
-        var selected = this.cy.$(':selected');
-        for (var el of selected) {
-          const id = parseInt(el.id());
-          if (el.isNode()) {
-            removedIds_w.push(id);
-            var conEdges = el.connectedEdges();
-            for (var conEdge of conEdges) {
-              removedIds_e.push(parseInt(conEdge.id()));
-            }
-
-          } else {
-            removedIds_e.push(id);
-          }
-          el.remove();
-        }
-
-        Array.prototype.unshift.apply(this.ids_w, removedIds_w);
-        this.ids_w = this.ids_w.sort(function(a, b){return a-b});
-        Array.prototype.unshift.apply(this.ids_e, removedIds_e);
-        this.ids_e = this.ids_e.sort(function(a, b){return b-a});
-      }
-    });
-  }
-
   redrawCy(cyJsonStr) {
+    var container = this.cy.data().container;
     this.cy.destroy();
-    this.cy = cytoscape({container: document.getElementById('cy')});
+    this.cy = cytoscape({container: container});
     var cy_json = JSON.parse(cyJsonStr);
     this.cy.json(cy_json);
-    this.addListeners();
+    // this.addListeners();
     this.initIdsConsideringExistCy();
   }
 

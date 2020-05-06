@@ -1,17 +1,113 @@
 <template>
   <div>
     <h1>Manual Graph</h1>
-    <div id="edit_graph_btn_group" class="btn_group">
-      <button id="add_vertex" class="btn" v-bind:class="{active: activeButton === 'add_vertex'}" v-on:click="changeActiveButton('add_vertex')">Add Vertex</button>
-      <button id="add_edge" class="btn"  v-bind:class="{active: activeButton === 'add_edge'}" v-on:click="changeActiveButton('add_edge')">Add Edge</button>
+    <div id="cy" ref="myCy">
     </div>
-    <button id="draw_circle_by_click" v-on:click="draw">Draw something in canvas</button>
-    <canvas id="canvas" width="500" height="500">
-    </canvas>
+    <button id="someId" v-on:click="showMyCy">PUSHHH</button>
   </div>
 </template>
 
 <script>
+
+  import {isNumeric} from "../js/utils.js";
+  import CyGraph from '../js/cy_graph.js';
+
+  var a = 5;
+  var cyGraph = new CyGraph();
+
+  function addListeners() {
+    cyGraph.cy.on('tap', function(evt) {
+      var evtTarget = evt.target;
+      if( evtTarget === cyGraph.cy )
+      {
+        let weight = prompt('Enter weight for new node');
+        if (!isNumeric(weight)) {
+          return;
+        }
+        var x = evt.position['x'];
+        var y = evt.position['y'];
+        var newId = cyGraph.ids_w.shift();
+        var node = {
+          data: {
+            id: newId,
+            weight: parseInt(weight),
+            name: 'n' + newId + ', w=' + weight
+          },
+          position: {
+            x: x,
+            y: y
+          }
+        };
+        cyGraph.cy.add(node);
+      }
+    });
+    cyGraph.cy.on('cxttapstart', function(evt) {
+      var evtTarget = evt.target;
+      if( evtTarget !== cyGraph.cy && evtTarget.isNode() ) {
+        var cyJson = cyGraph.cy.json();
+        var selected = cyGraph.cy.$(':selected');
+        for (var el of selected) {
+          if (el.isEdge()) {
+            continue;
+          }
+          var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+          if (!isNumeric(weight)) {
+            return;
+          }
+          var id = cyGraph.ids_e.shift();
+          var edge = {
+            data : {
+              id: id,
+              weight: parseInt(weight),
+              name: 'e' + (-id) + ', w=' + weight,
+              source: el.id(),
+              target: evtTarget.id()
+            }
+          };
+          cyGraph.cy.add(edge);
+        }
+
+        var g = cyGraph.transformCyGraph();
+        var isCyclic = g.isCyclic();
+        if (isCyclic) {
+          alert('Graph has a cycle now. Back to the previous state...');
+          this.cy.json(cyJson);
+          this.initIdsConsideringExistCy();
+        }
+      }
+    });
+  }
+
+  function addOnDeleteListener() {
+    document.addEventListener('keydown', (event) => {
+      const keyName = event.key;
+      var removedIds_w = [];
+      var removedIds_e = [];
+      if (keyName === 'Delete') {
+        var selected = cyGraph.cy.$(':selected');
+        for (var el of selected) {
+          const id = parseInt(el.id());
+          if (el.isNode()) {
+            removedIds_w.push(id);
+            var conEdges = el.connectedEdges();
+            for (var conEdge of conEdges) {
+              removedIds_e.push(parseInt(conEdge.id()));
+            }
+
+          } else {
+            removedIds_e.push(id);
+          }
+          el.remove();
+        }
+
+        Array.prototype.unshift.apply(cyGraph.ids_w, removedIds_w);
+        cyGraph.ids_w = cyGraph.ids_w.sort(function(a, b){return a-b});
+        Array.prototype.unshift.apply(cyGraph.ids_e, removedIds_e);
+        cyGraph.ids_e = cyGraph.ids_e.sort(function(a, b){return b-a});
+      }
+    });
+  }
+
   export default {
     data() {
       return {
@@ -19,29 +115,10 @@
       }
     },
     methods: {
-      changeActiveButton(activeButtonName) {
-        this.activeButton = activeButtonName
-      },
-      draw(event) {
-        var canvas = document.getElementById('canvas');
-        if (canvas.getContext) {
-          var ctx = canvas.getContext('2d');
-          var pos = getMousePosition(canvas, event);
-          var pos_x = pos.x;
-          var pos_y = pos.y;
-          ctx.fillStyle = "#000000";
-          ctx.beginPath();
-          ctx.arc(pos_x, pos_y, 50, 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      },
-
-      getMousePosition(canvas, event) {
-        var rect = canvas.getBoundingClientRect();
-        return {
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        }
+      showMyCy() {
+        cyGraph.initCyDummy(this.$refs.myCy);
+        addListeners();
+        addOnDeleteListener();
       }
     }
   }
@@ -58,5 +135,12 @@
   .btn .active {
     background-color: #666;
     color: white;
+  }
+
+  #cy {
+    width: 100%;
+    height: 500px;
+    display: block;
+    border: 1px solid black;
   }
 </style>

@@ -10,14 +10,14 @@ function info(s) {
   console.log(s);
 }
 
-class Vertex {
+export class Vertex {
   constructor(id, weight) {
     this.id = id;
     this.weight = weight;
   }
 }
 
-class Edge {
+export class Edge {
   constructor(id, weight, src, dest) {
     this.id = id;
     this.weight = weight;
@@ -27,7 +27,7 @@ class Edge {
 
 }
 
-class Graph {
+export class Graph {
   constructor() {
     this.vertices = [];
     this.edges = [];
