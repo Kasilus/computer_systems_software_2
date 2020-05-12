@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <style type="text/css">
@@ -7,6 +8,20 @@
       display: block;
       border: 1px solid black;
     }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: center;
+      padding: 8px;
+      width: 100px;
+      height: 15px;
+
+    }
+
   </style>
 </head>
 <body>
@@ -14,13 +29,15 @@
 <button type="button" onclick="saveCy()">Save to file</button>
 <button type="button" onclick="loadCy()">Load from file</button>
 <button type="button" onclick="deleteGraph()">Delete graph</button>
+<button type="button" onclick="gantt()">Gantt chart</button>
 <div id='cy'></div>
+<div id="gantt"></div>
 <script src="./graph.js"></script>
 <script src="./cy_graph.js"></script>
 <script src="./utils.js"></script>
-<script src="./cy_graph_i_o.js"></script>
+<!-- <script src="./cy_graph_i_o.js"></script> -->
 <script src="./lib/cytoscape.min.js"></script>
-<script>
+<script type="text/javascript">
 
   function loadCy() {
     var input = document.createElement("input");
@@ -30,7 +47,16 @@
   }
 
   function readCy(e) {
-    readSingleFile(e, cyGraph.redrawCy.bind(cyGraph));
+    readSingleFile(e, redrawCy);
+  }
+
+  function redrawCy(cyJsonStr) {
+    cyGraph.cy.destroy();
+    cyGraph.cy = cytoscape({container: document.getElementById('cy')});
+    var cy_json = JSON.parse(cyJsonStr);
+    cyGraph.cy.json(cy_json);
+    addListeners(cyGraph);
+    cyGraph.initIdsConsideringExistCy();
   }
 
   function saveCy() {
@@ -48,7 +74,306 @@
     cyGraph.clearCyEles();
   }
 
+  function addListeners(cyGraph) {
+    // tap on background (create new node)
+    cyGraph.cy.on('tap', function(evt) {
+      var evtTarget = evt.target;
+      if( evtTarget === cyGraph.cy )
+      {
+        let weight = prompt('Enter weight for new node');
+        if (!isNumeric(weight)) {
+          return;
+        }
+        var x = evt.position['x'];
+        var y = evt.position['y'];
+        var newId = cyGraph.ids_w.shift();
+        var node = {
+          data: {
+            id: newId,
+            weight: parseInt(weight),
+            name: 'n' + newId + ', w=' + weight
+          },
+          position: {
+            x: x,
+            y: y
+          }
+        };
+        cyGraph.cy.add(node);
+      }
+    });
+    cyGraph.cy.on('cxttapstart', function(evt) {
+      var evtTarget = evt.target;
+      if( evtTarget !== cyGraph.cy && evtTarget.isNode() ) {
+        var cyJson = cyGraph.cy.json();
+        var selected = cyGraph.cy.$(':selected');
+        for (var el of selected) {
+          if (el.isEdge()) {
+            continue;
+          }
+          var weight = prompt('Enter weight for new edge v' + el.id() + ' -> v' + evtTarget.id());
+          if (!isNumeric(weight)) {
+            return;
+          }
+          var id = cyGraph.ids_e.shift();
+          var edge = {
+            data : {
+              id: id,
+              weight: parseInt(weight),
+              name: 'e' + (-id) + ', w=' + weight,
+              source: el.id(),
+              target: evtTarget.id()
+            }
+          };
+          cyGraph.cy.add(edge);
+        }
+
+        var g = cyGraph.transformCyGraph();
+        var isCyclic = g.isCyclic();
+        if (isCyclic) {
+          alert('Graph has a cycle now. Restore the previous state...');
+          cyGraph.cy.json(cyJson);
+          cyGraph.initIdsConsideringExistCy();
+        }
+      }
+    });
+  }
+
+  function addOnDeleteListener(cyGraph) {
+    document.addEventListener('keydown', (event) => {
+      const keyName = event.key;
+      var removedIds_w = [];
+      var removedIds_e = [];
+      if (keyName === 'Delete') {
+        var selected = cyGraph.cy.$(':selected');
+        for (var el of selected) {
+          const id = parseInt(el.id());
+          if (el.isNode()) {
+            removedIds_w.push(id);
+            var conEdges = el.connectedEdges();
+            for (var conEdge of conEdges) {
+              removedIds_e.push(parseInt(conEdge.id()));
+            }
+
+          } else {
+            removedIds_e.push(id);
+          }
+          el.remove();
+        }
+
+        Array.prototype.unshift.apply(cyGraph.ids_w, removedIds_w);
+        cyGraph.ids_w = cyGraph.ids_w.sort(function(a, b){return a-b});
+        Array.prototype.unshift.apply(cyGraph.ids_e, removedIds_e);
+        cyGraph.ids_e = cyGraph.ids_e.sort(function(a, b){return b-a});
+      }
+    });
+  }
+
   var cyGraph = new CyGraph();
+  addListeners(cyGraph);
+  addOnDeleteListener(cyGraph);
+
+  class Task {
+    constructor(v) {
+      this.id = v.id;
+      this.v = v;
+    }
+  }
+
+  class CPU {
+    constructor(id) {
+      this.id = id;
+      this.completedTasks = [];
+      this.task = null;
+      this.timeToFree = 0;
+    }
+
+    isBusy() {
+      return task !== null;
+    }
+  }
+
+  class MB {
+    constructor(id) {
+      this.id = id;
+      this.savedTasks = [];
+      this.task = null;
+      this.timeToFree = 0;
+    }
+  }
+
+  function gantt() {
+    console.log('gantt START');
+    var tact = 0;
+
+    var ganttTable = document.getElementById('gantt_table');
+    // specify them via menu
+    var procNum = 4;
+    var memBanksNum = 2;
+
+    // not important?
+    var matrix = [];
+    var CPUs = [];
+    var MBs = [];
+
+    var graph = cyGraph.transformCyGraph();
+    var tasksMap = cyGraph.transformCyGraph().formQueueOfCompWorksVar3();
+    <!-- var tasksMap = cyGraph.transformCyGraph().formQueueOfCompWorksVar16(); -->
+    var idToVerticeMap = graph.getIdToVerticeMap();
+    var idToEdgeMap = graph.getIdToEdgeMap();
+    var srcToAllVerticesIds = graph.getSrcToAllVerticesIds();
+    var srcVerticeIdToEdges = graph.getSrcVerticeIdToEdges();
+    var destToAllSrcVerticesIds = graph.getDestToAllSrcVerticesIds();
+
+    console.log('idToVerticeMap');
+    printMap(idToVerticeMap);
+    console.log('idToEdgeMap');
+    printMap(idToEdgeMap);
+    console.log('srcToAllVerticesIds');
+    printMap(srcToAllVerticesIds);
+    console.log('srcVerticeIdToEdges');
+    printMap(srcVerticeIdToEdges);
+    console.log('destToAllSrcVerticesIds');
+    printMap(destToAllSrcVerticesIds);
+
+    console.log('tasks');
+    printMap(tasksMap);
+    // we can take keys only
+    var taskKeys = tasksMap.keys();
+    console.log(taskKeys);
+    var tasks = new Map();
+    // statuses: [ready, not_ready, process, finished] -> turn to enum
+    for (var [k, v] of tasksMap) {
+      tasks.set(k , 'not_ready');
+    }
+
+    for(var i=0; i<procNum; i+=2) {
+      // first row for transfer
+      matrix[i] = [];
+      // second for CPUs
+      matrix[i + 1] = [];
+      CPUs.push(new CPU(i / 2));
+    }
+
+    for(var i=0; i<memBanksNum; i++) {
+      MBs.push(new MB(i));
+    }
+
+    var allTasksFinished = false;
+    while (!allTasksFinished) {
+      // check ready tasks
+      for ([taskId, status] of tasks) {
+        if (status === 'not_ready') {
+          var isTaskReady = true;
+          var srcVerticeIds = destToAllSrcVerticesIds.get(taskId);
+          for (var srcVerticeId of srcVerticeIds) {
+            if (!tasks.get(srcVerticeId) === 'ready') {
+              isTaskReady = false;
+              break;
+            }
+          }
+          if (isTaskReady) {
+            tasks.get(taskId) = 'ready';
+          }
+        }
+      }
+
+      // immerse ready tasks by algorithm and finish processed
+
+
+      // read/write operations
+
+
+      tact++;
+      allTasksFinished = true;
+      for (var [taskId, status] of tasks) {
+        if (status !== 'finished') {
+          allTasksFinished = false;
+          break;
+        }
+      }
+    }
+
+
+    console.log('gantt END');
+  }
+
+  // draw a matrix in the table
+  var m;
+  // rows
+  m = new Array(8);
+  for (var i = 0; i < m.length; i++) {
+    m[i] = new Array(10);
+  }
+
+  m[0][3] = 'wr1, MB1';
+  m[0][4] = 'wr1, MB1';
+  m[0][5] = 'wr1, MB1';
+  m[1][0] = '1';
+  m[1][1] = '1';
+  m[1][2] = '1';
+  m[2][4] = 'r3, MB2';
+  m[2][5] = 'r3, MB2';
+  m[3][0] = '2';
+  m[3][1] = '2';
+  m[3][2] = '2';
+  m[3][3] = '2';
+  m[3][4] = '2';
+  m[3][6] = '2';
+  m[3][7] = '2';
+  m[3][8] = '2';
+  m[3][9] = '2';
+  m[4][2] = 'wr3, MB2';
+  m[4][3] = 'wr3, MB2';
+  m[4][6] = 'r1, MB1';
+  m[4][7] = 'r1, MB1';
+  m[4][8] = 'r1, MB1';
+  m[5][0] = '3';
+  m[5][1] = '3';
+  m[5][2] = '8';
+  m[5][6] = '4';
+  m[5][7] = '4';
+  m[5][9] = '7';
+  m[7][0] = '5';
+  m[7][1] = '5';
+  m[7][2] = '5';
+  m[7][3] = '5';
+  m[7][4] = '5';
+  m[7][5] = '5';
+  m[7][6] = '5';
+
+  console.log(JSON.stringify(m));
+
+  // convert matrix to the html table
+  var ganttTable = document.getElementById('gantt');
+  ganttTable.innerHTML = '';
+  ganttTable.innerHTML = createHTMLTable(m);
+  console.log(ganttTable);
+
+  function createHTMLTable(m) {
+    var tableHTML = "<table>";
+    for(var i = 0; i < m.length; i++) {
+      tableHTML += "<tr>";
+      if (i % 2 !== 0) {
+        tableHTML += "<td style='font-weight: bold;'> CPU" + ((i+1)/2) + "</td>";
+      } else {
+        tableHTML += "<td></td>";
+      }
+      for(var j = 0; j < m[0].length; j++){
+        if (m[i][j] == null) {
+          tableHTML += "<td></td>";
+        } else {
+          if (i % 2 !== 0) {
+            tableHTML += "<td style ='background-color:#FF4136'>" + m[i][j] + "</td>";
+          } else {
+            tableHTML += "<td style ='background-color:#0074D9'>" + m[i][j] + "</td>";
+          }
+        }
+      }
+      tableHTML += "</tr>";
+    }
+    tableHTML += "</table>";
+    return tableHTML;
+  }
 
 </script>
 </body>

@@ -1,8 +1,8 @@
-export function isNumeric(n) {
+function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-export function download(content, fileName, contentType) {
+function download(content, fileName, contentType) {
   var a = document.createElement("a");
   var file = new Blob([content], {type: contentType});
   a.href = URL.createObjectURL(file);
@@ -10,7 +10,7 @@ export function download(content, fileName, contentType) {
   a.click();
 }
 
-export function readSingleFile(e, bindCallback) {
+function readSingleFile(e, callback) {
   var file = e.target.files[0];
   if (!file) {
     return;
@@ -18,32 +18,32 @@ export function readSingleFile(e, bindCallback) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var contents = e.target.result;
-    bindCallback(contents);
+    callback(contents);
   };
   reader.readAsText(file);
 }
 
-export function removeFromArray(arr, values) {
+function removeFromArray(arr, values) {
   return arr.filter(function(value, index) {
     return values.indexOf(value) == -1;
   })
 }
 
-export function printMap(map) {
+function printMap(map) {
   for ([k,v] of map) {
-    console.log("k=" + k + ", v=" + v);
+    console.log("k=" + k + ", v=" + JSON.stringify(v));
   }
 }
 
-export function sortMapByValuesDesc(map) {
+function sortMapByValuesDesc(map) {
   return new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
 }
 
-export function sortMapByValuesAsc(map) {
+function sortMapByValuesAsc(map) {
   return new Map([...map.entries()].sort((a, b) => a[1] - b[1]));
 }
 
-export function getKeyValuePairByMaxValue(map) {
+function getKeyValuePairByMaxValue(map) {
   var maxKey = map.keys().next().value;
   var maxValue = map.get(maxKey);
   var maxPair = [maxKey, maxValue];
@@ -53,4 +53,22 @@ export function getKeyValuePairByMaxValue(map) {
     }
   }
   return maxPair;
+}
+
+function printMatrix(m) {
+  for(var i = 0; i < m.length; i++) {
+    var row = "";
+    for(var j = 0; j < m[i].length; j++) {
+      row += m[i][j] + " ";
+    }
+    console.log(row);
+  }
+}
+
+function getIdToObjectMap(arr) {
+  var map = new Map();
+  for (var o of arr) {
+    map.set(o.id, o);
+  }
+  return map;
 }
