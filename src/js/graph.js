@@ -85,6 +85,29 @@ class Graph {
     return srcVerticesToEdges;
   }
 
+  getDestVerticeIdToEdges() {
+    var destVerticeIdToEdges = new Map();
+
+    for (var v of this.vertices) {
+      destVerticeIdToEdges.set(v.id, []);
+    }
+
+    for (var e of this.edges) {
+      destVerticeIdToEdges.get(e.dest).push(e);
+    }
+
+    return destVerticeIdToEdges;
+  }
+
+  getEdge(src, dest) {
+    for (var e of this.edges) {
+      if (e.src === src && e.dest === dest) {
+        return e;
+      }
+    }
+    return null;
+  }
+
   getDestToAllSrcVerticesIds() {
     var destToAllSrcVerticesIdsMap = new Map();
     for (var v of this.vertices) {
@@ -117,6 +140,14 @@ class Graph {
       }
     }
 
+    console.log('TOPOLOGICAL SORT');
+    var numbersCopy = [];
+
+    for (var i = 0; i < stack.length; i++) {
+      numbersCopy[i] = stack[i];
+    }
+    console.log(numbersCopy.reverse());
+
     return stack;
   }
 
@@ -126,7 +157,7 @@ class Graph {
 
     debug("iterate through dest Vs")
     for (var destVId of srcToAllVerticesIds.get(srcVId)) {
-      debug("first dest V" + destVId);
+      debug("dest V" + destVId);
       if (visited.get(destVId) === false) {
         debug("Wow, it is dest and it hasn't been visited yet! Let's iterate its dests (into recursion)!");
         this._topologicalSortIn(destVId, srcToAllVerticesIds, visited, stack);
@@ -167,6 +198,9 @@ class Graph {
         }
       }
     }
+
+    console.log("LONGEST PATH FOR TASK " + vFromId);
+    printMap(longestPath);
 
     return longestPath;
   }
@@ -270,6 +304,7 @@ class Graph {
       info(conc);
     }
   }
+
 }
 
 function example1() {

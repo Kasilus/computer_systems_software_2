@@ -35,6 +35,14 @@ function printMap(map) {
   }
 }
 
+function printMapAsQueue(map) {
+  var queueStr = '';
+  for ([k,v] of map) {
+    queueStr += k + "(" + JSON.stringify(v) + "), ";
+  }
+  console.log(queueStr.substring(0, queueStr.length - 2));
+}
+
 function sortMapByValuesDesc(map) {
   return new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
 }
