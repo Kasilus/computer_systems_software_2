@@ -35,6 +35,12 @@ function printMap(map) {
   }
 }
 
+function printMap(map, keyName, valueName) {
+  for ([k,v] of map) {
+    console.log(keyName + "=" + JSON.stringify(k) + ", " + valueName + "=" + JSON.stringify(v));
+  }
+}
+
 function printMapAsQueue(map) {
   var queueStr = '';
   for ([k,v] of map) {

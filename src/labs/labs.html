@@ -135,7 +135,8 @@
       border: 1px solid #dddddd;
       text-align: center;
       padding: 8px;
-      width: 100px;
+      min-width: 400px;
+      max-width: 400px;
       height: 15px;
 
     }
@@ -178,7 +179,10 @@
 <h3>Genererate tasks queue</h3>
 <button id='gen_queue_var_3' onclick="gen_queue_var_3()">Variant 3</button>
 <button id='gen_queue_var_16' onclick="gen_queue_var_16()">Variant 16</button>
+<h3>Gantt chart</h3>
 <div id="gantt"></div>
+<br>
+<h3>MBs chart</h3>
 <div id="mb_gantt"></div>
 
 <script src="./graph.js"></script>
@@ -318,6 +322,9 @@
 
   function initNewCyGraph() {
     cyGraph = new CyGraph();
+    cyGraph.cy = cytoscape({container: document.getElementById('cy')});
+    var cy_json = JSON.parse('{"elements":{"nodes":[{"data":{"id":"1","weight":2,"name":"n1, w=2"},"position":{"x":173.99999999999991,"y":112.33333333333333},"group":"nodes","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":false,"classes":""},{"data":{"id":"2","weight":4,"name":"n2, w=4"},"position":{"x":387.3333333333333,"y":112.33333333333333},"group":"nodes","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":false,"classes":""},{"data":{"id":"3","weight":3,"name":"n3, w=3"},"position":{"x":235.6666666666666,"y":243.99999999999997},"group":"nodes","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":false,"classes":""},{"data":{"id":"4","weight":3,"name":"n4, w=3"},"position":{"x":484.00000000000006,"y":248.99999999999997},"group":"nodes","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":false,"classes":""},{"data":{"id":"5","weight":2,"name":"n5, w=2"},"position":{"x":305.6666666666666,"y":398.99999999999994},"group":"nodes","removed":false,"selected":true,"selectable":true,"locked":false,"grabbable":true,"pannable":false,"classes":""}],"edges":[{"data":{"id":"-1","weight":1,"name":"e1, w=1","source":"1","target":"3"},"position":{"x":0,"y":0},"group":"edges","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":true,"classes":""},{"data":{"id":"-2","weight":3,"name":"e2, w=3","source":"2","target":"3"},"position":{"x":0,"y":0},"group":"edges","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":true,"classes":""},{"data":{"id":"-3","weight":1,"name":"e3, w=1","source":"2","target":"4"},"position":{"x":0,"y":0},"group":"edges","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":true,"classes":""},{"data":{"id":"-4","weight":1,"name":"e4, w=1","source":"3","target":"5"},"position":{"x":0,"y":0},"group":"edges","removed":false,"selected":false,"selectable":true,"locked":false,"grabbable":true,"pannable":true,"classes":""}]},"style":[{"selector":"node","style":{"background-color":"rgb(102,102,102)","label":"data(name)"}},{"selector":"edge","style":{"width":"3px","line-color":"rgb(204,204,204)","target-arrow-color":"rgb(204,204,204)","target-arrow-shape":"triangle","curve-style":"bezier","label":"data(name)"}},{"selector":":selected","style":{"background-color":"rgb(70,130,180)","line-color":"rgb(70,130,180)","target-arrow-color":"rgb(70,130,180)"}}],"data":{},"zoomingEnabled":true,"userZoomingEnabled":true,"zoom":0.6,"minZoom":0.5,"maxZoom":0.6,"panningEnabled":true,"userPanningEnabled":true,"pan":{"x":224.60000000000005,"y":49.60000000000001},"boxSelectionEnabled":true,"renderer":{"name":"canvas"}}');
+    cyGraph.cy.json(cy_json);
     addListeners(cyGraph);
     addOnDeleteListener(cyGraph);
   }
@@ -343,10 +350,10 @@
 
   function createHTMLTableGantt(m) {
     var tableHTML = "<table>";
-    for(var i = 0; i < m.length; i++) {
+    for(var i = m.length - 1; i >= 0; i--) {
       tableHTML += "<tr>";
-      if (i % 2 !== 0) {
-        tableHTML += "<td style='font-weight: bold;'> CPU" + ((i+1)/2) + "</td>";
+      if (i % 2 === 0) {
+        tableHTML += "<td style='font-weight: bold;'> CPU" + (i/2) + "</td>";
       } else {
         tableHTML += "<td></td>";
       }
@@ -354,10 +361,10 @@
         if (m[i][j] == null) {
           tableHTML += "<td></td>";
         } else {
-          if (i % 2 !== 0) {
-            tableHTML += "<td style ='background-color:#FF4136'>" + m[i][j] + "</td>";
+          if (i % 2 === 0) {
+            tableHTML += "<td style ='background-color:#FF4136'>" + JSON.stringify(m[i][j]) + "</td>";
           } else {
-            tableHTML += "<td style ='background-color:#0074D9'>" + m[i][j] + "</td>";
+            tableHTML += "<td style ='background-color:#0074D9'>" + JSON.stringify(m[i][j]) + "</td>";
           }
         }
       }
@@ -369,14 +376,14 @@
 
   function createHTMLTableMBGantt(m) {
     var tableHTML = "<table>";
-    for(var i = 0; i < m.length; i++) {
+    for(var i = m.length - 1; i >= 0; i--) {
       tableHTML += "<tr>";
-      tableHTML += "<td style='font-weight: bold;'> MB" + (i+1) + "</td>";
-      for(var j = 0; j < m[0].length; j++){
-        if (m[i][j] === undefined) {
+      tableHTML += "<td style='font-weight: bold;'> MB" + i + "</td>";
+      for (var j = 0; j < m[i].length; j++) {
+        if (m[i][j] == null) {
           tableHTML += "<td></td>";
         } else {
-          tableHTML += "<td style ='background-color:#0074D9'>" + m[i][j] + "</td>";
+          tableHTML += "<td style ='background-color:#0074D9'>" + JSON.stringify(m[i][j]) + "</td>";
         }
       }
       tableHTML += "</tr>";
@@ -388,7 +395,7 @@
   class CPU {
     constructor(id) {
       this.id = id;
-      this.arr[] = new Array(2);
+      this.arr = new Array(2);
       // first for CPU computation
       this.arr[0] = [];
       // second for local memory of CPU (it is mapped on MB memory)
@@ -401,23 +408,31 @@
       return this.arr[0][tact] === undefined;
     }
 
-    immerseTask(start, taskId) {
-      var taskWeight = idToVerticeMap.get(taskId).weight;
+    immerseTask(start, taskId, taskWeight) {
       var computeOperation = new ComputeOperation(taskId);
-      for (var i = 0; i < taskWeight; i++) {
-        this.arr[0][start + i] = computeOperation;
+      var trueStart;
+      var i = start;
+      while (true) {
+        if (this.arr[0][i] === undefined) {
+          trueStart = i;
+          break;
+        }
+        i++;
+      }
+      for (var j = 0; j < taskWeight; j++) {
+        this.arr[0][trueStart + j] = computeOperation;
       }
     }
 
     addIOOperation(start, edgeWeight, ioOperation) {
-      for (var i = 0; i < edgeWeidght; i++) {
+      for (var i = 0; i < edgeWeight; i++) {
         this.arr[1][start + i] = ioOperation;
       }
     }
 
     isFreeOnIOOperationInRange(start, end) {
       for (var i = start; i < end; i++) {
-        if (this.arr[1] !== undefined) {
+        if (this.arr[1][i] !== undefined) {
           return false;
         }
       }
@@ -430,14 +445,14 @@
     constructor(id) {
       this.id = id;
       // memory of MB
-      this.arr[] = [];
+      this.arr = [];
       // for comfort use
       this.taskIdsInMemory = [];
     }
 
     addIOOperation(start, edgeWeight, ioOperation) {
-      for (var i = 0; i < edgeWeidght; i++) {
-        this.arr[0][start + i] = ioOperation;
+      for (var i = 0; i < edgeWeight; i++) {
+        this.arr[start + i] = ioOperation;
       }
     }
 
@@ -463,14 +478,14 @@
   }
 
   var ComputeOperation_id_counter = 0;
-  class ComputeOperation() {
+  class ComputeOperation {
     constructor(taskId) {
       this.id = ComputeOperation_id_counter++;
       this.taskId = taskId;
     }
   }
 
-  function getFreeMB(i) {
+  function getFreeMB(i, MBs) {
     for (var mb of MBs) {
       if (mb.arr[i] === undefined) {
         return mb;
@@ -479,7 +494,7 @@
     return null;
   }
 
-  function getFreeMBInRange(start, end) {
+  function getFreeMBInRange(start, end, MBs) {
     for (var mb of MBs) {
       for (var i = start; i < end; i++) {
         if (mb.arr[i] !== undefined) {
@@ -491,10 +506,10 @@
     return null;
   }
 
-  function addIOOperation(cpu, mb, start, srcTaskId, destTaskId, edgeWeidght, type) {
+  function addIOOperation(cpu, mb, start, srcTaskId, destTaskId, edgeWeight, type) {
     var ioOperation = new IO_Operation(srcTaskId, destTaskId, type);
-    cpu.addIOOperation(start, edgeWeidght, ioOperation);
-    mb.addIOOperation(start, edgeWeidght, ioOperation);
+    cpu.addIOOperation(start, edgeWeight, ioOperation);
+    mb.addIOOperation(start, edgeWeight, ioOperation);
   }
 
   function gantt() {
@@ -557,6 +572,7 @@
     while (!allTasksFinished) {
 
       // mark ready tasks
+      printWithTact(tact, 'MARK READY TASKS');
       for ([taskId, status] of tasks) {
         if (status === 'not_ready') {
           var isTaskReady = true;
@@ -575,29 +591,41 @@
       }
 
       // immerse ready tasks (without parents or with parents, that were processed by current processor?)
+      printWithTact(tact, 'IMMERSE READY TASKS');
       for ([taskId, status] of tasks) {
+        printWithTact(tact, 'TASK ' + taskId + ' , STATUS = ' + status);
         if (status === 'ready') {
+          printWithTact(tact, 'STATUS IS READY');
           var isImmersed = false;
+          printWithTact(tact, 'GET CPU FOR READY TASK');
           for (var cpu of CPUs) {
-            if (cpu.isFree()) {
+            printWithTact(tact, 'CPU ' + cpu.id);
+            if (cpu.isFree(tact)) {
+              printWithTact(tact, 'CPU IS FREE. CHECK IF ALL PARENT TASKS ARE IN CPU MEMORY');
               var srcVerticeIds = destToAllSrcVerticesIds.get(taskId);
+              printWithTact(tact, 'PARENT TASKS : [' + srcVerticeIds + ']');
               var canBeImmersed = true;
               for (var srcVerticeId of srcVerticeIds) {
+                printWithTact(tact, 'CHECKING OF PARENT TASK ' + srcVerticeId);
                 if (!cpu.taskIdsInMemory.includes(srcVerticeId)) {
+                  printWithTact(tact, 'PARENT TASK ' + srcVerticeId + ' IS NOT FOUND IN CPU MEMORY');
                   canBeImmersed = false;
                   break;
                 }
+                printWithTact(tact, 'PARENT TASK ' + srcVerticeId + ' IS FOUND IN CPU MEMORY');
               }
               if (canBeImmersed === true) {
                 tasks.set(taskId, 'immersed');
-                cpu.immerseTask(tact, taskId);
-                printWithTact(tact, 'TASK IS IMMERSED: ' + taskId);
+                cpu.immerseTask(tact, taskId, idToVerticeMap.get(taskId).weight);
+                printWithTact(tact, 'TASK ' + taskId + ' IS IMMERSED ON CPU ' + cpu.id);
                 isImmersed = true;
+                break;
               }
             }
           }
           // choose best CPU and immerse task on it
           if (!isImmersed) {
+            printWithTact(tact, 'TASK ' + taskId + ' IS NOT IMMERSED, CAUSE NO CPU CONTAINS ALL PARENTS TASKS IN MEMORY');
             var cpusWithParentTasks = new Map();
             for (var cpu of CPUs) {
               var srcVerticesIds = destToAllSrcVerticesIds.get(taskId);
@@ -607,48 +635,86 @@
                   srcVerticesIdsInCpuMemory.push(srcVerticeId);
                 }
               }
-              cpusWithParentTasks.push(cpu, srcVerticesIdsInCpuMemory);
+              cpusWithParentTasks.set(cpu, srcVerticesIdsInCpuMemory);
             }
+            printWithTact(tact, 'CPUS WITH PARENT TASKS');
+            printMap(cpusWithParentTasks, 'CPU', 'PARENT TASKS');
             var bestCpu;
             var maxOutputData = -1;
+            printWithTact(tact, 'CHOOSE BEST CPU');
             for ([cpu, parentTaskIds] of cpusWithParentTasks) {
-              if (cpu.isFree()) {
+              printWithTact(tact, 'CPU ' + cpu.id);
+              if (cpu.isFree(tact)) {
+                printWithTact(tact, 'CPU ' + cpu.id + ' IS FREE');
                 var outputData = 0;
                 for (var parentTaskId of parentTaskIds) {
                   outputData += graph.getEdge(parentTaskId, taskId).weight;
                 }
+                printWithTact(tact, 'OUTPUT DATA AMOUNT ' + outputData);
                 if (outputData > maxOutputData) {
+                  printWithTact(tact, 'NOW THE BEST IS CPU ' + cpu.id + ' WITH OUTPUT DATA AMOUNT ' + outputData);
                   bestCpu = cpu;
                   maxOutputData = outputData;
                 }
               }
             }
             // if bestCpu is null than assign first free
-            for (var cpu of CPUs) {
-              if (cpu.isFree()) {
-                bestCpu = cpu;
-                break;
+            if (bestCpu == null) {
+              printWithTact(tact, 'BEST CPU IS NOT FOUND AMONG THAT, WHICH CONTAINS PARENT TASKS IN MEMORY. CHOOSE FIRST FREE AS BEST CPU');
+              for (var cpu of CPUs) {
+                printWithTact(tact, 'CPU ' + cpu.id);
+                if (cpu.isFree(tact)) {
+                  printWithTact(tact, 'CPU ' + cpu.id + ' IS FREE');
+                  printWithTact(tact, 'NOW THE BEST IS CPU ' + cpu.id);
+                  bestCpu = cpu;
+                  break;
+                }
               }
             }
+
             // model immersion with i/o tasks
             if (bestCpu !== null) {
+              printWithTact(tact, 'MODEL IMMERSION OF TASK ' + taskId + ' ON BEST CPU ' + bestCpu.id + ' WITH I/O OPERATIONS FROM PARENT TASKS');
+              var maxReadTact = -1;
               for ([cpu, parentTaskIds] of cpusWithParentTasks) {
+                printWithTact(tact, 'CPU ' + cpu.id);
+                printWithTact(tact, 'PARENT TASKS OF TASK ' + taskId + ' : [' + JSON.stringify(parentTaskIds));
                 if (cpu.id !== bestCpu.id) {
                   // find end of parent task and put it on write/read operations
-                  // TODO store the end of computation of tasks
+                  printWithTact(tact, 'FIND THE MOMENT OF COMPLETION OF PARENT TASKS');
                   for (var i = tact; i > 0; i--) {
+                    printWithTact(tact + '.' + cpu.id + '.' + i, '');
+                    if (cpu.arr[0][i] === undefined) {
+                      printWithTact(tact + '.' + cpu.id + '.' + i, 'EMPTY ON THIS INNER TACT');
+                      continue;
+                    }
+                    if (cpu.arr[0][i+1] !== undefined && cpu.arr[0][i+1].id === cpu.arr[0][i].id) {
+                      printWithTact(tact + '.' + cpu.id + '.' + i, 'THIS PARENT TASK IS ALREADY SENT TO SHARED MEMORY');
+                      continue;
+                    }
                     var parentTaskId = cpu.arr[0][i].taskId;
-                    if (parentTaskId !== undefined && parentTaskIds.includes(parentTaskId)) {
+                    printWithTact(tact + '.' + cpu.id + '.' + i, 'PARENT TASK ' + parentTaskId + ' IN CPU ' + cpu.id + ' MEMORY');
+                    if (parentTaskIds.includes(parentTaskId)) {
+                      printWithTact(tact + '.' + cpu.id + '.' + i, 'PARENT TASK ' + parentTaskId + ' IS A PARENT OF READY CHILD TASK ' + taskId);
                       // put write/read operation
                       // getFreeMB and free local cpu memory on i+1 tact
-                      var edge = graph.getEdge(parentTaskId, taskId).weight;
-                      var j;
+                      // if all read operations are completed before current tact, than immerse task immediately
+                      var edge = graph.getEdge(parentTaskId, taskId);
+                      printWithTact(tact + '.' + cpu.id + '.' + i, 'EDGE BETWEEN PARENT TASK ' + parentTaskId + ' AND READY CHILD TASK ' + taskId +
+                        ' = ' + JSON.stringify(edge));
+                      var j = i + 1;
                       var mb;
-                      for (j = i + 1; ; j++) {
-                        var freeMB = getFreeMBInRange(j, j + edge.weight);
+                      printWithTact(tact + '.' + cpu.id + '.' + i, 'TRY PUT I/O OPERATIONS WITHOUT CONFLICTS OF CPU MEMORY AND MEMORY BANKS');
+                      for (j; ; j++) {
+                        printWithTact(tact + '.' + cpu.id + '.' + j, 'TRY PUT WR OPERATION');
+                        printWithTact(tact + '.' + cpu.id + '.' + j, 'GET FREE MB AND CPU MEMORY IN RANGE (' + j + ', ' + (j+edge.weight) + ')');
+                        var freeMB = getFreeMBInRange(j, j + edge.weight, MBs);
+                        printWithTact(tact + '.' + cpu.id + '.' + j, 'FREE MB IN RANGE : ' + JSON.stringify(freeMB));
                         var isCpuFreeOnIOOperation = cpu.isFreeOnIOOperationInRange(j, j + edge.weight);
+                        printWithTact(tact + '.' + cpu.id + '.' + j, 'CPU ' + cpu.id + ' MEMORY IS FREE IN RANGE : ' + isCpuFreeOnIOOperation);
                         if (freeMB !== null && isCpuFreeOnIOOperation) {
-                          printWithTact(tact, 'WRITE PARENT TASK ' + parentTaskId + 'FROM CPU ' + cpu.id + ' TO MB ' + freeMB.id +
+                          printWithTact(tact + '.' + cpu.id + '.' + j, 'CPU AND MEMORY ARE FREE IN RANGE!');
+                          printWithTact(tact, 'WRITE PARENT TASK ' + parentTaskId + ' FROM CPU ' + cpu.id + ' TO MB ' + freeMB.id +
                             ' FOR CHILD TASK ' + taskId + ' IN RANGE (' + j + ', ' + (j + edge.weight) + ')');
                           addIOOperation(cpu, freeMB, j, parentTaskId, taskId, edge.weight, 'wr');
                           j = j + edge.weight;
@@ -657,12 +723,20 @@
                         }
                       }
                       for (j; ; j++) {
-                        var isMBfree = mb.isFreeMBInRange(j, j + edge.weight);
+                        printWithTact(tact + '.' + bestCpu.id + '.' + j, 'TRY PUT R OPERATION');
+                        printWithTact(tact + '.' + bestCpu.id + '.' + j, 'ARE MB AND CPU MEMORY FREE IN RANGE (' + j + ', ' + (j+edge.weight) + ')');
+                        var isMBfree = mb.isFreeInRange(j, j + edge.weight);
+                        printWithTact(tact + '.' + bestCpu.id + '.' + j, 'MB ' + mb.id + ' IS FREE IN RANGE : ' + isMBfree);
                         var isCpuFreeOnIOOperation = bestCpu.isFreeOnIOOperationInRange(j, j + edge.weight);
+                        printWithTact(tact + '.' + bestCpu.id + '.' + j, 'CPU ' + bestCpu.id + ' MEMORY IS FREE IN RANGE : ' + isCpuFreeOnIOOperation);
                         if (isMBfree && isCpuFreeOnIOOperation) {
-                          printWithTact(tact, 'READ PARENT TASK ' + parentTaskId + ' FROM MB ' + mb.id + 'ON CPU ' + bestCpu.id
-                          ' FOR CHILD TASK ' + taskId + ' IN RANGE (' + j + ', ' + (j + edge.weight) + ')');
+                          printWithTact(tact + '.' + bestCpu.id + '.' + j, 'CPU AND MEMORY ARE FREE IN RANGE!');
+                          printWithTact(tact, 'READ PARENT TASK ' + parentTaskId + ' FROM MB ' + mb.id + ' ON CPU ' + bestCpu.id +
+                            ' FOR CHILD TASK ' + taskId + ' IN RANGE (' + j + ', ' + (j + edge.weight) + ')');
                           addIOOperation(bestCpu, mb, j, parentTaskId, taskId, edge.weight, 'r');
+                          if ((j + edge.weight) > maxReadTact) {
+                            maxReadTact = j + edge.weight;
+                          }
                           break;
                         }
                       }
@@ -670,36 +744,66 @@
                   }
                 }
               }
+
+              // immerse task after last read
+              tasks.set(taskId, 'immersed');
+              // or maxReadTact?
+              bestCpu.immerseTask(maxReadTact, taskId, idToVerticeMap.get(taskId).weight);
+              printWithTact(tact, 'TASK ' + taskId + ' IS IMMERSED ON CPU ' + bestCpu.id);
+              break;
             }
           }
         }
       }
 
       // complete tasks
+      printWithTact(tact, 'COMPLETE TASKS');
       for (var cpu of CPUs) {
-        if (!cpu.isFree()) {
+        printWithTact(tact, 'CPU ' + cpu.id);
+        if (!cpu.isFree(tact)) {
+          printWithTact(tact, 'CPU ' + cpu.id + ' IS NOT FREE');
           var currentComputeOperation = cpu.arr[0][tact];
           if (currentComputeOperation !== undefined) {
+            var currentComputeOperationTaskId = currentComputeOperation.taskId;
+            printWithTact(tact, 'CURRENT COMPUTE OPERATION IS NOT EMPTY');
+            printWithTact(tact, 'CURRENT COMPUTE OPERATION = ' + JSON.stringify(currentComputeOperation));
             var isTaskFromCurrentComputeOperationCanBeCompleted = false;
             var nextComputeOperation = cpu.arr[0][tact+1];
             if (nextComputeOperation !== undefined) {
-              var currentComputeOperationTaskId = currentComputeOperation.taskId;
+              printWithTact(tact, 'NEXT COMPUTE OPERATION IS NOT EMPTY');
+              printWithTact(tact, 'NEXT COMPUTE OPERATION = ' + JSON.stringify(nextComputeOperation));
               var nextComputeOperationTaskId = nextComputeOperation.taskId;
               if (currentComputeOperationTaskId !== nextComputeOperationTaskId) {
                 isTaskFromCurrentComputeOperationCanBeCompleted = true;
               }
             } else {
+              printWithTact(tact, 'NEXT COMPUTE OPERATION IS EMPTY');
               isTaskFromCurrentComputeOperationCanBeCompleted = true;
             }
             if (isTaskFromCurrentComputeOperationCanBeCompleted) {
               tasks.set(currentComputeOperationTaskId, 'completed');
-              printWithTact(tact, 'TASK IS COMPLETED: ' + currentComputeOperationTaskId);
+              printWithTact(tact, 'TASK ' + currentComputeOperationTaskId + ' IS COMPLETED ON CPU ' + cpu.id);
+              cpu.taskIdsInMemory.push(currentComputeOperationTaskId);
+              printWithTact(tact, 'CPU ' + cpu.id + ' TASKS IN MEMORY : [' + cpu.taskIdsInMemory + ']');
             }
           }
         }
       }
 
-      tact++;
+      printWithTact(tact, 'END OF THE TACT');
+      printWithTact(tact, 'CPU STATE');
+      for (var cpu of CPUs) {
+        console.log('CPU ' + cpu.id);
+        console.log(JSON.stringify(cpu.arr[1]));
+        console.log(JSON.stringify(cpu.arr[0]));
+      }
+      printWithTact(tact, 'MB STATE');
+      for (var mb of MBs) {
+        console.log('MB ' + mb.id);
+        console.log(JSON.stringify(mb.arr));
+      }
+
+      printWithTact(tact, 'CHECK IF ALL TASKS FINISHED');
       allTasksFinished = true;
       for (var [taskId, status] of tasks) {
         if (status !== 'completed') {
@@ -707,10 +811,9 @@
           break;
         }
       }
-      console.log(DELIMITER);
-      console.log('end of the tact');
-      console.log(JSON.stringify(m));
 
+      console.log(DELIMITER);
+      tact++;
       if (tact > 15) {
         return;
       }
@@ -718,38 +821,57 @@
 
     console.log('gantt END');
 
-    console.log(JSON.stringify(m));
+    // prepare matrix for gantt table
+    var m1;
+    var m2;
+    // rows
+    m1 = new Array(CPUs.length * 2);
+    for (var i = 0; i < m1.length; i++) {
+      m1[i] = new Array(tact);
+    }
 
-    // convert matrix to the html table
+    for (var i = m1.length - 1; i >= 0; i-=2) {
+      for (var j = 0; j < tact; j++) {
+        var compElement = CPUs[(i - 1) / 2].arr[0][j];
+        var ioElement = CPUs[(i - 1) / 2].arr[1][j];
+        if (compElement === undefined) {
+          m1[i-1][j] = null;
+        } else {
+          m1[i-1][j] = compElement;
+        }
+        if (ioElement === undefined) {
+          m1[i][j] = null;
+        } else {
+          m1[i][j] = ioElement;
+        }
+      }
+    }
+
+    m2 = new Array(MBs.length);
+    for (var i = 0; i < m2.length; i++) {
+      m2[i] = new Array(tact);
+    }
+    for (var i = m2.length - 1; i >= 0; i--) {
+      for (var j = 0; j < tact; j++) {
+        var ioElement = MBs[i].arr[j];
+        if (ioElement === undefined) {
+          m2[i][j] = null;
+        } else {
+          m2[i][j] = ioElement;
+        }
+      }
+    }
+
+
     var ganttTable = document.getElementById('gantt');
     ganttTable.innerHTML = '';
-    ganttTable.innerHTML = createHTMLTable(m);
+    ganttTable.innerHTML = createHTMLTableGantt(m1);
     console.log(ganttTable);
+    var mbTable = document.getElementById('mb_gantt');
+    mbTable.innerHTML = '';
+    mbTable.innerHTML = createHTMLTableMBGantt(m2);
+    console.log(mbTable);
   }
-
-  // prepare matrix for gantt table
-  var m1;
-  var m2;
-  // rows
-  m1 = new Array(CPUs.length * 2);
-  for (var i = 0; i < m1.length; i+=2) {
-    m1[i] = CPUs[i*2].arr[0];
-    m1[i] = CPUs[i*2+1].arr[1];
-  }
-  m2 = new Array(MBs.length);
-  for (var i = 0; i < m2.length; i++) {
-    m2[i] = MBs[i].arr;
-  }
-
-
-  var ganttTable = document.getElementById('gantt');
-  ganttTable.innerHTML = '';
-  ganttTable.innerHTML = createHTMLTableGantt(m1);
-  console.log(ganttTable);
-  var mbTable = document.getElementById('mb_gantt');
-  mbTable.innerHTML = '';
-  mbTable.innerHTML = createHTMLTableMBGantt(m2);
-  console.log(mbTable);
 
 </script>
 </body>

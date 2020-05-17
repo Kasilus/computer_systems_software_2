@@ -140,14 +140,6 @@ class Graph {
       }
     }
 
-    console.log('TOPOLOGICAL SORT');
-    var numbersCopy = [];
-
-    for (var i = 0; i < stack.length; i++) {
-      numbersCopy[i] = stack[i];
-    }
-    console.log(numbersCopy.reverse());
-
     return stack;
   }
 
@@ -199,7 +191,6 @@ class Graph {
       }
     }
 
-    console.log("LONGEST PATH FOR TASK " + vFromId);
     printMap(longestPath);
 
     return longestPath;
