@@ -179,10 +179,10 @@
 <h3>Genererate tasks queue</h3>
 <button id='gen_queue_var_3' onclick="gen_queue_var_3()">Variant 3</button>
 <button id='gen_queue_var_16' onclick="gen_queue_var_16()">Variant 16</button>
-<h3>Gantt chart</h3>
+<h3 id="gantt_label">Gantt chart</h3>
 <div id="gantt"></div>
 <br>
-<h3>MBs chart</h3>
+<h3 id="mb_gantt_label">MBs chart</h3>
 <div id="mb_gantt"></div>
 
 <script src="./graph.js"></script>
@@ -362,9 +362,11 @@
           tableHTML += "<td></td>";
         } else {
           if (i % 2 === 0) {
-            tableHTML += "<td style ='background-color:#FF4136'>" + JSON.stringify(m[i][j]) + "</td>";
+            tableHTML += "<td style ='background-color:#FF4136'>" + m[i][j].taskId + "</td>";
           } else {
-            tableHTML += "<td style ='background-color:#0074D9'>" + JSON.stringify(m[i][j]) + "</td>";
+            var str = '';
+            str += m[i][j].type + m[i][j].srcTaskId + ' (' + m[i][j].srcTaskId + '->' + m[i][j].destTaskId + ')';
+            tableHTML += "<td style ='background-color:#0074D9'>" + str + "</td>";
           }
         }
       }
@@ -383,7 +385,9 @@
         if (m[i][j] == null) {
           tableHTML += "<td></td>";
         } else {
-          tableHTML += "<td style ='background-color:#0074D9'>" + JSON.stringify(m[i][j]) + "</td>";
+          var str = '';
+          str += m[i][j].type + m[i][j].srcTaskId + ' (' + m[i][j].srcTaskId + '->' + m[i][j].destTaskId + ')';
+          tableHTML += "<td style ='background-color:#0074D9'>" + str + "</td>";
         }
       }
       tableHTML += "</tr>";
@@ -522,8 +526,8 @@
 
     var ganttTable = document.getElementById('gantt_table');
     // specify them via menu
-    var procNum = 4;
-    var memBanksNum = 2;
+    var procNum = 8;
+    var memBanksNum = 4;
 
     var m = [];
     var CPUs = [];
@@ -686,7 +690,7 @@
                 if (cpu.id !== bestCpu.id) {
                   // find end of parent task and put it on write/read operations
                   printWithTact(tact, 'FIND THE MOMENT OF COMPLETION OF PARENT TASKS');
-                  for (var i = tact; i > 0; i--) {
+                  for (var i = tact; i >= 0; i--) {
                     printWithTact(tact + '.' + cpu.id + '.' + i, '');
                     if (cpu.arr[0][i] === undefined) {
                       printWithTact(tact + '.' + cpu.id + '.' + i, 'EMPTY ON THIS INNER TACT');
@@ -817,6 +821,9 @@
 
       console.log(DELIMITER);
       tact++;
+      if (tact > 1000) {
+        break;
+      }
     }
 
     console.log('gantt END');
