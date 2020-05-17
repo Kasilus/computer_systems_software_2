@@ -496,12 +496,16 @@
 
   function getFreeMBInRange(start, end, MBs) {
     for (var mb of MBs) {
+      var isMBInRange = true;
       for (var i = start; i < end; i++) {
         if (mb.arr[i] !== undefined) {
+          isMBInRange = false;
           break;
         }
       }
-      return mb;
+      if (isMBInRange) {
+        return mb;
+      }
     }
     return null;
   }
@@ -673,7 +677,7 @@
             }
 
             // model immersion with i/o tasks
-            if (bestCpu !== null) {
+            if (bestCpu !== undefined) {
               printWithTact(tact, 'MODEL IMMERSION OF TASK ' + taskId + ' ON BEST CPU ' + bestCpu.id + ' WITH I/O OPERATIONS FROM PARENT TASKS');
               var maxReadTact = -1;
               for ([cpu, parentTaskIds] of cpusWithParentTasks) {
@@ -747,7 +751,6 @@
 
               // immerse task after last read
               tasks.set(taskId, 'immersed');
-              // or maxReadTact?
               bestCpu.immerseTask(maxReadTact, taskId, idToVerticeMap.get(taskId).weight);
               printWithTact(tact, 'TASK ' + taskId + ' IS IMMERSED ON CPU ' + bestCpu.id);
               break;
@@ -814,9 +817,6 @@
 
       console.log(DELIMITER);
       tact++;
-      if (tact > 15) {
-        return;
-      }
     }
 
     console.log('gantt END');
