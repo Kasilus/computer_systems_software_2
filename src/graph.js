@@ -191,10 +191,32 @@ class Graph {
 			}
 		}
 		
-		printMap(longestPath);
+		printMap(longestPath, "k", "v");
 		
 		return longestPath;
 	}
+	
+	criticalPath() {
+		var allCrits = [];
+		var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
+		var destToAllVerticesIds = this.getDestToAllSrcVerticesIds();
+		for (var v of this.vertices) {
+			// find only for start vertices
+			if (destToAllVerticesIds.get(v.id).length < 1) {
+				var critsToVertices = this.longestPath(v.id);
+				var critToLeafVertices = new Map();
+				for ([k,v] of critsToVertices) {
+					if (srcToAllVerticesIds.get(k).length < 1 && v !== Number.NEGATIVE_INFINITY) {
+						allCrits.push(v);
+					}
+				}
+			}
+		}
+		console.log("ALL FUCKING CRITS");
+		console.log(allCrits);
+		return allCrits.sort(function(a, b){return b-a})[0];
+	}
+	
 	
 	isCyclic() {
 		var srcToAllVerticesIds = this.getSrcToAllVerticesIds();
@@ -294,6 +316,18 @@ class Graph {
 			}
 		info(conc);
 		}
+	}
+	
+	calcConnectivityKoefficient() {
+		var verticesSum = 0;
+		for (var v of this.vertices) {
+			verticesSum += v.weight;
+		}
+		var edgesSum = 0;
+		for (var e of this.edges) {
+			edgesSum += e.weight;
+		}
+		return verticesSum / (verticesSum + edgesSum);
 	}
 	
 }

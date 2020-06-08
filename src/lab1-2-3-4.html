@@ -213,6 +213,10 @@
 		</div>
 	</div>
 	
+	<button id="countGraphParameters" onclick="countGraphParameters()">Count</button>
+	<p id="graphParamsKcnct"></p>
+	<p id="graphParamsCrit"></p>
+	
 	<div id='parametersBlock' style='display:none'>
 		<h3><label for="procNum">Specify number of CPUs</label><br></h3>
 		<input type="text" id="procNum" name="procNum"><br>
@@ -230,6 +234,14 @@
 	<script src="./utils.js"></script>
 	<script src="../lib/cytoscape.min.js"></script>
 	<script type="text/javascript">
+	
+		function countGraphParameters() {
+			var graph = cyGraph.transformCyGraph();
+			var Kcncnt = graph.calcConnectivityKoefficient();
+			document.getElementById('graphParamsKcnct').innerHTML = 'Kcnct = ' + Kcncnt;
+			var critValue = graph.criticalPath();
+			document.getElementById('graphParamsCrit').innerHTML = 'Crit = ' + critValue;
+		}
 		
 		// TODO is hardcoded now. Will be changed later for common variant
 		function showSMPParametersItem() {
